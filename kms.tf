@@ -78,6 +78,41 @@ data "aws_iam_policy_document" "kms_policy" {
   }
 }
 
+data "aws_iam_policy_document" "kms_key_policy" {
+  count = try(var.settings.encryption_at_rest.enabled, false) ? 1 : 0
+  statement {
+    sid    = "AllowAtlasToUseKMS"
+    effect = "Allow"
+    actions = [
+      "kms:Decrypt",
+      "kms:DescribeKey",
+      "kms:Encrypt",
+      "kms:GenerateDataKey",
+      "kms:ReEncrypt*",
+      "kms:ListRetirableGrants",
+      "kms:Describe*",
+      "kms:List*"
+    ]
+    resources = ["*"]
+    principals {
+      type        = "AWS"
+      identifiers = [mongodbatlas_cloud_provider_access_setup.this[count.index].aws_config[0].atlas_aws_account_arn]
+    }
+  }
+  statement {
+    sid    = "RootUserAccess"
+    effect = "Allow"
+    actions = [
+      "kms:*"
+    ]
+    resources = ["*"]
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+  }
+}
+
 resource "aws_iam_role_policy" "kms" {
   count  = try(var.settings.encryption_at_rest.enabled, false) ? 1 : 0
   role   = aws_iam_role.kms[count.index].name
@@ -92,6 +127,7 @@ resource "aws_kms_key" "kms" {
   enable_key_rotation     = try(var.settings.encryption_at_rest.enable_key_rotation, true)
   rotation_period_in_days = try(var.settings.encryption_at_rest.rotation_period_in_days, 90)
   multi_region            = try(var.settings.encryption_at_rest.multi_region, false)
+  policy                  = data.aws_iam_policy_document.kms_key_policy[count.index].json
   tags = merge(
     {
       Name = format("mongodbatlas-%s-kms", local.system_name)
