@@ -1,4 +1,4 @@
-name: Terraform Transit Gateway Module
+name: Terraform Module Mongo Atlas Project with AWS integrations
 #logo: logo/logo.jpg
 
 license: "APACHE2"
@@ -8,23 +8,255 @@ copyrights:
     url: "https://cloudops.works"
     year: "2024"
 
-github_repo: cloudopsworks/terraform-module-aws-vpc-setup
+github_repo: cloudopsworks/terraform-module-mongoatlas-project
 
 description: |-
-  VPC Module for setting up transit gateway with ResourceAccessMananger support.
+  Terraform module for MongoDB Atlas project creation and management with AWS integrations. This module provides capabilities for creating and managing MongoDB Atlas projects, including network peering, security configurations, and AWS service integrations.
 
 # Introduction to the project
-#introduction: |-
-#  This is an introduction.
+introduction: |-
+  This Terraform module enables automated provisioning and management of MongoDB Atlas projects with AWS infrastructure integration. It provides a comprehensive solution for:
+
+  - MongoDB Atlas project creation and configuration
+  - Network peering between AWS VPC and Atlas clusters
+  - IAM role configuration for secure access
+  - Project IP access list management
+  - Team and user access management
+  - API key configuration for project access
+  - Multi-region support for global deployments
+  - Custom VPC CIDR block configuration
+  - Automated IAM role and policy management
+  - Project-level security settings
+  - Cross-region VPC peering
+  - Team-based access control with granular permissions
+  - IP whitelist management for enhanced security
 
 # How to use this project
-#usage: |-
+usage: |-
+  To use this module, you need to configure the following provider requirements:
+
+  ```hcl
+  terraform {
+    required_providers {
+      mongodbatlas = {
+        source = "mongodb/mongodbatlas"
+      }
+      aws = {
+        source = "hashicorp/aws"
+      }
+    }
+  }
+  ```
+
+  Key variables for configuration:
+  - `project_name`: Name of the MongoDB Atlas project
+  - `org_id`: MongoDB Atlas organization ID
+  - `region`: AWS region for VPC peering
+  - `vpc_id`: AWS VPC ID for peering connection
+  - `team_ids`: List of team IDs for project access
+  - `ip_addresses`: List of IP addresses for access list
+  
+  ```yaml
+  settings:
+    default_alerts_settings: true | false
+    collect_database_specifics_statistics_enabled: true | false
+    data_explorer_enabled: true | false
+    extended_storage_sizes_enabled: true | false
+    performance_advisor_enabled: true | false
+    schema_advisor_enabled: true | false
+    backup_compliance:
+      enabled: true | false  (default: false)
+      authorized_user:
+        email: string
+        first_name: string
+        last_name: string
+      copy_protection_enabled: true | false (default: false)
+      pit_enabled: true | false (default: false)
+      encryption_at_rest_enabled: true | false (default: false)
+      restore_window_days: number (default: 7)
+      hourly:
+        interval: number (default: 1)
+        retention_unit: string (default: "days")
+        retention_value: number (default: 1)
+      daily:
+        interval: number (default: 1)
+        retention_unit: string (default: "days")
+        retention_value: number (default: 7)
+      weekly:
+        interval: number (default: 1)
+        retention_unit: string (default: "weeks")
+        retention_value: number (default: 4)
+      monthly:
+        interval: number (default: 1)
+        retention_unit: string (default: "months")
+        retention_value: number (default: 12)
+      yearly:
+        interval: number (default: 1)
+        retention_unit: string (default: "years")
+        retention_value: number (default: 2)
+      on_demand:
+        interval: number (default: 1)
+        retention_unit: string (default: "days")
+        retention_value: number (default: 7)
+   maintenance:
+     enabled: true | false (default: false)
+     day_of_week: string (default: 1 "Sunday")
+     hour_of_day: number (default: 0)
+     start_asap: true | false (default: null)
+     defer: true | false (default: null)
+     auto_defer: true | false (default: null)
+     auto_defer_once_enabled: true | false (default: null)
+   access_list:
+    <id>:
+      comment: string (optional, item comment)
+      ip_address: string (optional, conflicts with aws_security_group & cidr_block)
+      aws_security_group: string (optional, conflicts with ip_address & cidr_block)
+      cidr_block: string (optional, conflicts with ip_address & aws_security_group)
+  encryption_at_rest:
+    enabled: true | false (default: false)
+    deletion_window_in_days: number (default: 7)
+    enable_key_rotation: true | false (default: true)
+    rotation_period_in_days: number (default: 90)
+    multi_region: true | false (default: false)
+  ```
 
 # Example usage
-#examples: |-
+examples: |-
+  Basic Terragrunt configuration:
+
+  ```hcl
+  include "root" {
+    path = find_in_parent_folders()
+  }
+
+  terraform {
+    source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v1.2.8"
+  }
+
+  inputs = {
+    project_name = "my-atlas-project"
+    org_id      = "5e7b98765432"
+    region      = "us-east-1"
+    vpc_id      = "vpc-1234567890"
+    team_ids    = ["team1", "team2"]
+    ip_addresses = ["10.0.0.0/24"]
+  }
+  ```
+
+  Multi-region configuration:
+
+  ```hcl
+  terraform {
+    source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v1.2.8"
+  }
+
+  inputs = {
+    project_name = "multi-region-project"
+    org_id      = "5e7b98765432"
+    regions     = ["us-east-1", "eu-west-1"]
+    vpc_configs = {
+      primary = {
+        vpc_id = "vpc-1234567890"
+        cidr   = "10.0.0.0/16"
+      }
+      secondary = {
+        vpc_id = "vpc-0987654321"
+        cidr   = "172.16.0.0/16"
+      }
+    }
+    team_ids    = ["team1", "team2"]
+    ip_addresses = ["10.0.0.0/24", "172.16.0.0/24"]
+  }
+  ```
+
+  Advanced security configuration:
+
+  ```hcl
+  terraform {
+    source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v1.2.8"
+  }
+
+  inputs = {
+    project_name = "secure-project"
+    org_id      = "5e7b98765432"
+    region      = "us-east-1"
+    vpc_id      = "vpc-1234567890"
+    enable_security_features = true
+    custom_roles = {
+      readonly = {
+        role_name = "ReadOnly"
+        actions   = ["READ"]
+      }
+      admin = {
+        role_name = "Admin"
+        actions   = ["READ", "WRITE", "DELETE"]
+      }
+    }
+    ip_access_list = [
+      {
+        cidr_block = "10.0.0.0/24"
+        comment    = "Internal network"
+      },
+      {
+        ip_address = "203.0.113.1"
+        comment    = "Office IP"
+      }
+    ]
+  }
+  ```
 
 # How to get started quickly
-#quickstart: |-
+quickstart: |-
+  1. Configure your MongoDB Atlas API credentials:
+     ```bash
+     export MONGODB_ATLAS_PUBLIC_KEY="your-public-key"
+     export MONGODB_ATLAS_PRIVATE_KEY="your-private-key"
+     export AWS_ACCESS_KEY_ID="your-aws-access-key"
+     export AWS_SECRET_ACCESS_KEY="your-aws-secret-key"
+     ```
+
+  2. Create a basic terragrunt.hcl file:
+     ```hcl
+     terraform {
+       source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v1.2.8"
+     }
+
+     inputs = {
+       project_name = "quickstart-project"
+       org_id      = "your-org-id"
+       region      = "us-east-1"
+       vpc_id      = "your-vpc-id"
+     }
+     ```
+
+  3. Create provider.tf file:
+     ```hcl
+     terraform {
+       required_providers {
+         mongodbatlas = {
+           source  = "mongodb/mongodbatlas"
+           version = "~> 1.0"
+         }
+         aws = {
+           source  = "hashicorp/aws"
+           version = "~> 4.0"
+         }
+       }
+     }
+     ```
+
+  4. Initialize and apply:
+     ```bash
+     terragrunt init
+     terragrunt plan
+     terragrunt apply
+     ```
+
+  5. Verify project creation:
+     ```bash
+     terragrunt output project_id
+     terragrunt output connection_strings
+     ```
 
 include:
   - "docs/targets.md"
