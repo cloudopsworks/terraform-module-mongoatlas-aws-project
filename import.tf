@@ -65,5 +65,5 @@ output "imported_alert_statement" {
 }
 
 output "imported_alert_yaml" {
-  value = var.generate_import ? yamlencode(local.alert_yaml) : null
+  value = var.generate_import ? nonsensitive(yamlencode(local.alert_yaml)) : null
 }
