@@ -70,9 +70,6 @@ data "aws_iam_policy_document" "kms_policy" {
       "kms:Encrypt",
       "kms:GenerateDataKey",
       "kms:ReEncrypt*",
-      "kms:ListRetirableGrants",
-      "kms:Describe*",
-      "kms:List*"
     ]
     resources = [aws_kms_key.kms[count.index].arn]
   }
