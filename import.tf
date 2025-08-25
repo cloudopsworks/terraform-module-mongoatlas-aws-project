@@ -6,10 +6,15 @@
 
 locals {
   format_alerts = data.mongodbatlas_alert_configurations.import.results
-  import_statements = compact([
+  import_statements = compact(concat([
     for i, alert in local.format_alerts :
-    "import 'mongodbatlas_alert_configuration[\"${alert.event_type}\"]' '${alert.project_id}-${alert.alert_configuration_id}'"
-  ])
+    "import 'mongodbatlas_alert_configuration.alert[\"${alert.event_type}\"]' '${alert.project_id}-${alert.alert_configuration_id}'"
+    if alert.event_type != "AWS_ENCRYPTION_KEY_NEEDS_ROTATION"
+    ], [
+    for i, alert in local.format_alerts :
+    "import 'mongodbatlas_alert_configuration.kms_alert[0]' '${alert.project_id}-${alert.alert_configuration_id}'"
+    if alert.event_type == "AWS_ENCRYPTION_KEY_NEEDS_ROTATION"
+  ]))
   alert_yaml = {
     alerts = [
       for i, alert in local.format_alerts : {
@@ -51,7 +56,7 @@ locals {
           threshold = alert.threshold_config[0].threshold
           units     = alert.threshold_config[0].units
         } : null
-      }
+      } if alert.event_type != "AWS_ENCRYPTION_KEY_NEEDS_ROTATION"
     ]
   }
 }

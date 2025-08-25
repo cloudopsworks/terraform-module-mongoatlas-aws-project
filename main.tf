@@ -127,7 +127,7 @@ resource "mongodbatlas_alert_configuration" "kms_alert" {
   }
 }
 
-resource "mongodbatlas_alert_configuration" "alerts" {
+resource "mongodbatlas_alert_configuration" "alert" {
   for_each = {
     for alerts in try(var.settings.alerts, []) : alerts.event_type => alerts
   }
