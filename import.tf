@@ -16,7 +16,7 @@ locals {
         event_type = alert.event_type
         enabled    = alert.enabled
         notifications = [
-          for n in alert.notifications : {
+          for n in alert.notification : {
             type_name           = n.type_name
             interval_min        = try(n.interval_min, null)
             delay_min           = try(n.delay_min, null)
@@ -33,7 +33,7 @@ locals {
           }
         ]
         matchers = [
-          for m in alert.matchers : {
+          for m in alert.matcher : {
             field_name = m.field_name
             operator   = m.operator
             value      = m.value
