@@ -128,14 +128,12 @@ resource "mongodbatlas_alert_configuration" "kms_alert" {
 }
 
 resource "mongodbatlas_alert_configuration" "alert" {
-  for_each = {
-    for alerts in try(var.settings.alerts, []) : alerts.event_type => alerts
-  }
+  count      = length(try(var.settings.alerts, []))
   project_id = mongodbatlas_project.this.id
-  event_type = each.value.event_type
-  enabled    = try(each.value.enabled, true)
+  event_type = var.settings.alerts[count.index].event_type
+  enabled    = try(var.settings.alerts[count.index].enabled, true)
   dynamic "notification" {
-    for_each = try(each.value.notifications, [])
+    for_each = try(var.settings.alerts[count.index].notifications, [])
     content {
       type_name                   = try(notification.value.type_name, null)
       roles                       = try(notification.value.roles, null)
@@ -166,7 +164,7 @@ resource "mongodbatlas_alert_configuration" "alert" {
     }
   }
   dynamic "matcher" {
-    for_each = try(each.value.matchers, [])
+    for_each = try(var.settings.alerts[count.index].matchers, [])
     content {
       field_name = try(matchers.value.field_name, null)
       operator   = try(matchers.value.operator, null)
@@ -174,22 +172,22 @@ resource "mongodbatlas_alert_configuration" "alert" {
     }
   }
   dynamic "metric_threshold_config" {
-    for_each = length(try(each.value.metric_threshold_config, {})) > 0 ? [1] : []
+    for_each = length(try(var.settings.alerts[count.index].metric_threshold_config, {})) > 0 ? [1] : []
     content {
-      metric_name = try(each.value.metric_threshold_config.metric_name, null)
-      operator    = try(each.value.metric_threshold_config.operator, null)
-      threshold   = try(each.value.metric_threshold_config.threshold, null)
-      units       = try(each.value.metric_threshold_config.units, null)
-      mode        = try(each.value.metric_threshold_config.mode, null)
+      metric_name = try(var.settings.alerts[count.index].metric_threshold_config.metric_name, null)
+      operator    = try(var.settings.alerts[count.index].metric_threshold_config.operator, null)
+      threshold   = try(var.settings.alerts[count.index].metric_threshold_config.threshold, null)
+      units       = try(var.settings.alerts[count.index].metric_threshold_config.units, null)
+      mode        = try(var.settings.alerts[count.index].metric_threshold_config.mode, null)
     }
   }
 
   dynamic "threshold_config" {
-    for_each = length(try(each.value.threshold_config, {})) > 0 ? [1] : []
+    for_each = length(try(var.settings.alerts[count.index].threshold_config, {})) > 0 ? [1] : []
     content {
-      operator  = try(each.value.threshold_config.operator, null)
-      threshold = try(each.value.threshold_config.threshold, null)
-      units     = try(each.value.threshold_config.units, null)
+      operator  = try(var.settings.alerts[count.index].threshold_config.operator, null)
+      threshold = try(var.settings.alerts[count.index].threshold_config.threshold, null)
+      units     = try(var.settings.alerts[count.index].threshold_config.units, null)
     }
   }
 }
