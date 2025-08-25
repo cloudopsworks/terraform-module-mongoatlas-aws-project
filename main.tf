@@ -113,13 +113,20 @@ resource "mongodbatlas_alert_configuration" "kms_alert" {
   project_id = mongodbatlas_project.this.id
   event_type = "AWS_ENCRYPTION_KEY_NEEDS_ROTATION"
   enabled    = false
+  notification {
+    type_name     = "GROUP"
+    interval_min  = 60
+    delay_min     = 0
+    email_enabled = true
+    roles         = ["GROUP_OWNER"]
+  }
 }
 
 resource "mongodbatlas_alert_configuration" "alerts" {
   for_each = {
     for alerts in try(var.settings.alerts, []) : alerts.event_type => alerts
   }
-  project_id = mongodbatlas_alert_configuration
+  project_id = mongodbatlas_project.this.id
   event_type = each.value.event_type
   enabled    = try(each.value.enabled, true)
   dynamic "notification" {
@@ -153,7 +160,7 @@ resource "mongodbatlas_alert_configuration" "alerts" {
 
     }
   }
-  dynamic "matchers" {
+  dynamic "matcher" {
     for_each = try(each.value.matchers, [])
     content {
       field_name = try(matchers.value.field_name, null)

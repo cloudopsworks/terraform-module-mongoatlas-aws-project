@@ -93,7 +93,46 @@ variable "organization_id" {
 # alerts:
 #   - event_type: "string" # Name of the alert configuration  - https://www.mongodb.com/docs/api/doc/atlas-admin-api-v2/operation/operation-createalertconfiguration
 #     enabled: true | false # (default: true)
-#
+#     notifications:
+#       - type_name: "string" # Notification type name - https://www.mongodb.com/docs/api/doc/atlas-admin-api-v2/operation/operation-createalertconfiguration
+#         roles: ["string"] # Roles - https://www.mongodb.com/docs/api/doc/atlas-admin-api-v2/operation/operation-createalertconfiguration
+#         api_token: "string" # (optional) Slack API token. Required for the SLACK notifications type. If the token later becomes invalid, Atlas sends an email to the project owner and eventually removes the token
+#         channel_name: "string" # (optional) Slack channel name. Required for the SLACK notifications type
+#         datadog_api_key: "string" # (optional) Datadog API key. Required for the DATADOG notifications type
+#         datadog_region: "string" # (optional) Datadog region. Required for the DATADOG notifications type
+#         delay_min: number # (optional) The delay, in minutes, between the time the alert condition is met and the time Atlas sends the alert notification
+#         email_address: "string" # (optional) Email address. Required for the EMAIL notifications type
+#         email_enabled: true | false # (optional) Flag that indicates whether to send email notifications to the project owner. Required for the PROJECT_OWNER notifications type
+#         interval_min: number # (optional) The interval, in minutes, at which Atlas repeats the alert notification while the alert condition persists.
+#         mobile_number: "string" # (optional) Mobile number. Required for the SMS notifications type
+#         ops_genie_api_key: "string" # (optional) OpsGenie API key. Required for the OPS_GENIE notifications type
+#         ops_genie_region: "string" # (optional) OpsGenie region.
+#         service_key: "string" # (optional) Service key. Required for the PAGER_DUTY notifications type
+#         sms_enabled: true | false # (optional) Flag that indicates whether to send SMS notifications to the project owner. Required for the PROJECT_OWNER notifications type
+#         team_id: "string" # (optional) The ID of the team that receives the alert notification. Required for the TEAMS notifications type
+#         team_name: "string" # (optional) The name of the team that receives the alert notification. Required for the TEAMS notifications type
+#         integration_id: "string" # (optional) The ID of the third-party integration that notifies the team. Required for the TEAMS notifications type
+#         notifier_id: "string" # (optional) The ID of the third-party integration that notifies the team. Required for the TEAMS notifications type
+#         username: "string" # (optional) Username for Atlas number.
+#         victor_ops_api_key: "string" # (optional) VictorOps API key. Required for the VICTOR_OPS notifications type
+#         victor_ops_routing_key: "string" # (optional) VictorOps routing key
+#         webhook_secret: "string" # (optional) Webhook secret. Required for the WEBHOOK notifications type
+#         webhook_url: "string" # (optional) Webhook URL. Required for the WEBHOOK notifications type
+#         microsoft_teams_webhook_url: "string" # (optional) Microsoft Teams webhook URL. Required for the MICROSOFT_TEAMS notifications type
+#     matchers:
+#       - field_name: "string" # (optional) Field name
+#         operator: "string" # (optional) Operator
+#         value: "string" # (optional) Value
+#     metric_threshold_config:
+#       metric_name: "string" # (optional) Metric name
+#       operator: "string" # (optional) Operator
+#       threshold: number # (optional) Threshold
+#       units: "string" # (optional) Units
+#       mode: "string" # (optional) Mode
+#     metric_threshold:
+#       operator: "string" # (optional) Operator
+#       threshold: number # (optional) Threshold
+#       units: "string" # (optional) Units
 variable "settings" {
   description = "(optional) The backup compliance policy"
   type        = any
