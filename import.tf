@@ -39,17 +39,17 @@ locals {
             value      = m.value
           }
         ]
-        metric_threshold_config = try(alert.metric_threshold_config, null) != null ? {
-          metric_name = alert.metric_threshold_config.metric_name
-          operator    = alert.metric_threshold_config.operator
-          threshold   = alert.metric_threshold_config.threshold
-          units       = alert.metric_threshold_config.units
-          mode        = alert.metric_threshold_config.mode
+        metric_threshold_config = length(try(alert.metric_threshold_config, [])) > 0 ? {
+          metric_name = alert.metric_threshold_config[0].metric_name
+          operator    = alert.metric_threshold_config[0].operator
+          threshold   = alert.metric_threshold_config[0].threshold
+          units       = alert.metric_threshold_config[0].units
+          mode        = alert.metric_threshold_config[0].mode
         } : null
-        threshold_config = try(alert.threshold_config, null) != null ? {
-          operator  = alert.threshold_config.operator
-          threshold = alert.threshold_config.threshold
-          units     = alert.threshold_config.units
+        threshold_config = length(try(alert.threshold_config, [])) > 0 ? {
+          operator  = alert.threshold_config[0].operator
+          threshold = alert.threshold_config[0].threshold
+          units     = alert.threshold_config[0].units
         } : null
       }
     ]
