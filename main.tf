@@ -120,6 +120,11 @@ resource "mongodbatlas_alert_configuration" "kms_alert" {
     email_enabled = true
     roles         = ["GROUP_OWNER"]
   }
+  threshold_config {
+    operator  = "GREATER_THAN"
+    threshold = 90
+    units     = "DAYS"
+  }
 }
 
 resource "mongodbatlas_alert_configuration" "alerts" {
