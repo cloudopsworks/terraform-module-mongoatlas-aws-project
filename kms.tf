@@ -89,9 +89,6 @@ data "aws_iam_policy_document" "kms_key_policy" {
       "kms:Encrypt",
       "kms:GenerateDataKey",
       "kms:ReEncrypt*",
-      "kms:ListRetirableGrants",
-      "kms:Describe*",
-      "kms:List*"
     ]
     resources = ["*"]
     principals {
