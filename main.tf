@@ -112,7 +112,6 @@ resource "mongodbatlas_alert_configuration" "kms_alert" {
   count      = try(var.settings.encryption_at_rest.enabled, false) ? 1 : 0
   project_id = mongodbatlas_project.this.id
   event_type = "AWS_ENCRYPTION_KEY_NEEDS_ROTATION"
-  alert_configuration_id= "324380948309842084"
   enabled    = false
   notification {
     type_name     = "GROUP"

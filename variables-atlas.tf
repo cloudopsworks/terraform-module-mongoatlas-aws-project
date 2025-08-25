@@ -138,3 +138,9 @@ variable "settings" {
   type        = any
   default     = {}
 }
+
+variable "generate_import" {
+  description = "Generate import statements"
+  type        = bool
+  default     = false
+}
