@@ -96,16 +96,21 @@ resource "aws_iam_role_policy" "kms" {
   role  = aws_iam_role.kms[count.index].name
   name  = "kms_access"
   policy = jsonencode({
-    Sid    = "AllowAtlasToUseKMS"
-    Effect = "Allow"
-    Action = [
-      "kms:Decrypt",
-      "kms:DescribeKey",
-      "kms:Encrypt",
-      "kms:GenerateDataKey",
-      "kms:ReEncrypt*",
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowAtlasToUseKMS"
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt",
+          "kms:DescribeKey",
+          "kms:Encrypt",
+          "kms:GenerateDataKey",
+          "kms:ReEncrypt*",
+        ]
+        Resource = aws_kms_key.kms[count.index].arn
+      }
     ]
-    Resource = aws_kms_key.kms[count.index].arn
   })
 }
 
