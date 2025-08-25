@@ -64,6 +64,6 @@ output "imported_alert_statement" {
   value = var.generate_import ? join("\n", local.import_statements) : null
 }
 
-output "imported_alert_yaml" {
-  value = var.generate_import ? nonsensitive(yamlencode(local.alert_yaml)) : null
+output "imported_alert_json" {
+  value = var.generate_import ? nonsensitive(jsonencode(local.alert_yaml)) : null
 }
