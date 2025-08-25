@@ -90,6 +90,10 @@ variable "organization_id" {
 #   enable_key_rotation: true | false (default: true)
 #   rotation_period_in_days: number (default: 90)
 #   multi_region: true | false (default: false)
+# alerts:
+#   - event_type: "string" # Name of the alert configuration  - https://www.mongodb.com/docs/api/doc/atlas-admin-api-v2/operation/operation-createalertconfiguration
+#     enabled: true | false # (default: true)
+#
 variable "settings" {
   description = "(optional) The backup compliance policy"
   type        = any
