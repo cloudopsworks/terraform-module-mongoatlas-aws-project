@@ -59,25 +59,6 @@ resource "aws_iam_role" "kms" {
   tags               = local.all_tags
 }
 
-data "aws_iam_policy_document" "kms_policy" {
-  count = try(var.settings.encryption_at_rest.enabled, false) ? 1 : 0
-  statement {
-    sid    = "AllowAtlasToUseKMS"
-    effect = "Allow"
-    actions = [
-      "kms:Decrypt",
-      "kms:DescribeKey",
-      "kms:Encrypt",
-      "kms:GenerateDataKey",
-      "kms:ReEncrypt*",
-      "kms:ListRetirableGrants",
-      "kms:Describe*",
-      "kms:List*"
-    ]
-    resources = [aws_kms_key.kms[count.index].arn]
-  }
-}
-
 data "aws_iam_policy_document" "kms_key_policy" {
   count = try(var.settings.encryption_at_rest.enabled, false) ? 1 : 0
   statement {
@@ -111,10 +92,26 @@ data "aws_iam_policy_document" "kms_key_policy" {
 }
 
 resource "aws_iam_role_policy" "kms" {
-  count  = try(var.settings.encryption_at_rest.enabled, false) ? 1 : 0
-  role   = aws_iam_role.kms[count.index].name
-  name   = "kms_access"
-  policy = data.aws_iam_policy_document.kms_policy[count.index].json
+  count = try(var.settings.encryption_at_rest.enabled, false) ? 1 : 0
+  role  = aws_iam_role.kms[count.index].name
+  name  = "kms_access"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowAtlasToUseKMS"
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt",
+          "kms:DescribeKey",
+          "kms:Encrypt",
+          "kms:GenerateDataKey",
+          "kms:ReEncrypt*",
+        ]
+        Resource = aws_kms_key.kms[count.index].arn
+      }
+    ]
+  })
 }
 
 resource "aws_kms_key" "kms" {

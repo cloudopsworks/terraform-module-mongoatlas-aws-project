@@ -107,3 +107,89 @@ resource "mongodbatlas_project_ip_access_list" "this" {
   cidr_block         = try(each.value.cidr_block, null)
 
 }
+
+resource "mongodbatlas_alert_configuration" "kms_alert" {
+  count      = try(var.settings.encryption_at_rest.enabled, false) ? 1 : 0
+  project_id = mongodbatlas_project.this.id
+  event_type = "AWS_ENCRYPTION_KEY_NEEDS_ROTATION"
+  enabled    = false
+  notification {
+    type_name     = "GROUP"
+    interval_min  = 60
+    delay_min     = 0
+    email_enabled = true
+    roles         = ["GROUP_OWNER"]
+  }
+  threshold_config {
+    operator  = "GREATER_THAN"
+    threshold = 90
+    units     = "DAYS"
+  }
+}
+
+resource "mongodbatlas_alert_configuration" "alert" {
+  for_each = {
+    for idx, alert in try(var.settings.alerts, []) : "${alert.event_type}-${try(alert.metric_threshold_config.metric_name, "")}${try(alert.metric_threshold_config.operator, alert.threshold_config.operator, "")}${try(alert.metric_threshold_config.threshold, alert.threshold_config.threshold, "")}" => alert
+    if alert.event_type != "AWS_ENCRYPTION_KEY_NEEDS_ROTATION"
+  }
+  project_id = mongodbatlas_project.this.id
+  event_type = each.value.event_type
+  enabled    = try(each.value.enabled, true)
+  dynamic "notification" {
+    for_each = try(each.value.notifications, [])
+    content {
+      type_name                   = try(notification.value.type_name, null)
+      roles                       = try(notification.value.roles, null)
+      api_token                   = try(notification.value.api_token, null)
+      channel_name                = try(notification.value.channel_name, null)
+      datadog_api_key             = try(notification.value.datadog_api_key, null)
+      datadog_region              = try(notification.value.datadog_region, null)
+      delay_min                   = try(notification.value.delay_min, null)
+      email_address               = try(notification.value.email_address, null)
+      email_enabled               = try(notification.value.email_enabled, null)
+      interval_min                = try(notification.value.interval_min, null)
+      mobile_number               = try(notification.value.mobile_number, null)
+      ops_genie_api_key           = try(notification.value.ops_genie_api_key, null)
+      ops_genie_region            = try(notification.value.ops_genie_region, null)
+      service_key                 = try(notification.value.service_key, null)
+      sms_enabled                 = try(notification.value.sms_enabled, null)
+      team_id                     = try(notification.value.team_id, null)
+      team_name                   = try(notification.value.team_name, null)
+      integration_id              = try(notification.value.integration_id, null)
+      notifier_id                 = try(notification.value.notifier_id, null)
+      username                    = try(notification.value.username, null)
+      victor_ops_api_key          = try(notification.value.victor_ops_api_key, null)
+      victor_ops_routing_key      = try(notification.value.victor_ops_routing_key, null)
+      webhook_url                 = try(notification.value.webhook_url, null)
+      webhook_secret              = try(notification.value.webhook_secret, null)
+      microsoft_teams_webhook_url = try(notification.value.microsoft_teams_webhook_url, null)
+    }
+  }
+  dynamic "matcher" {
+    for_each = try(each.value.matchers, [])
+    content {
+      field_name = try(matchers.value.field_name, null)
+      operator   = try(matchers.value.operator, null)
+      value      = try(matchers.value.value, null)
+    }
+  }
+  dynamic "metric_threshold_config" {
+    for_each = length(try(each.value.metric_threshold_config, {})) > 0 ? [1] : []
+    content {
+      metric_name = try(each.value.metric_threshold_config.metric_name, null)
+      operator    = try(each.value.metric_threshold_config.operator, null)
+      threshold   = try(each.value.metric_threshold_config.threshold, null)
+      units       = try(each.value.metric_threshold_config.units, null)
+      mode        = try(each.value.metric_threshold_config.mode, null)
+    }
+  }
+
+  dynamic "threshold_config" {
+    for_each = length(try(each.value.threshold_config, {})) > 0 ? [1] : []
+    content {
+      operator  = try(each.value.threshold_config.operator, null)
+      threshold = try(each.value.threshold_config.threshold, null)
+      units     = try(each.value.threshold_config.units, null)
+    }
+  }
+}
