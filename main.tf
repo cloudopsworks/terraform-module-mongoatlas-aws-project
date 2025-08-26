@@ -163,7 +163,6 @@ resource "mongodbatlas_alert_configuration" "alert" {
       webhook_url                 = try(notification.value.webhook_url, null)
       webhook_secret              = try(notification.value.webhook_secret, null)
       microsoft_teams_webhook_url = try(notification.value.microsoft_teams_webhook_url, null)
-
     }
   }
   dynamic "matcher" {

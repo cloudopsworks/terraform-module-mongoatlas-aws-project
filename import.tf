@@ -22,19 +22,31 @@ locals {
         enabled    = alert.enabled
         notifications = [
           for n in alert.notification : {
-            type_name           = n.type_name
-            interval_min        = try(n.interval_min, null)
-            delay_min           = try(n.delay_min, null)
-            email_address       = try(n.email_address, null)
-            sms_number          = try(n.sms_number, null)
-            mobile_device_token = try(n.mobile_device_token, null)
-            team_id             = try(n.team_id, null)
-            api_token           = try(n.api_token, null)
-            url                 = try(n.url, null)
-            username            = try(n.username, null)
-            password            = try(n.password, null)
-            auth_type           = try(n.auth_type, null)
-            headers             = try(n.headers, null)
+            type_name                   = n.type_name
+            roles                       = try(n.roles, null)
+            api_token                   = try(n.api_token, null)
+            channel_name                = try(n.channel_name, null)
+            datadog_api_key             = try(n.datadog_api_key, null)
+            datadog_region              = try(n.datadog_region, null)
+            delay_min                   = try(n.delay_min, null)
+            email_address               = try(n.email_address, null)
+            email_enabled               = try(n.email_enabled, null)
+            interval_min                = try(n.interval_min, null)
+            mobile_number               = try(n.mobile_number, null)
+            ops_genie_api_key           = try(n.ops_genie_api_key, null)
+            ops_genie_region            = try(n.ops_genie_region, null)
+            service_key                 = try(n.service_key, null)
+            sms_enabled                 = try(n.sms_enabled, null)
+            team_id                     = try(n.team_id, null)
+            team_name                   = try(n.team_name, null)
+            integration_id              = try(n.integration_id, null)
+            notifier_id                 = try(n.notifier_id, null)
+            username                    = try(n.username, null)
+            victor_ops_api_key          = try(n.victor_ops_api_key, null)
+            victor_ops_routing_key      = try(n.victor_ops_routing_key, null)
+            webhook_url                 = try(n.webhook_url, null)
+            webhook_secret              = try(n.webhook_secret, null)
+            microsoft_teams_webhook_url = try(n.microsoft_teams_webhook_url, null)
           }
         ]
         matchers = [
