@@ -129,7 +129,7 @@ resource "mongodbatlas_alert_configuration" "kms_alert" {
 
 resource "mongodbatlas_alert_configuration" "alert" {
   for_each = {
-    for idx, alert in try(var.settings.alerts, []) : "${alert.event_type}-${try(alert.metric_threshold_config.metric_name, "")}${try(alert.metric_threshold_config.operator, alert.trheshold_config.operator, "")}${try(alert.metric_threshold_config.threshold, alert.trheshold_config.threshold, "")}" => alert
+    for idx, alert in try(var.settings.alerts, []) : "${alert.event_type}-${try(alert.metric_threshold_config.metric_name, "")}${try(alert.metric_threshold_config.operator, alert.threshold_config.operator, "")}${try(alert.metric_threshold_config.threshold, alert.threshold_config.threshold, "")}" => alert
     if alert.event_type != "AWS_ENCRYPTION_KEY_NEEDS_ROTATION"
   }
   project_id = mongodbatlas_project.this.id
