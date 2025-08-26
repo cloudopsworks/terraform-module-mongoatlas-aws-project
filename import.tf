@@ -8,7 +8,7 @@ locals {
   format_alerts = data.mongodbatlas_alert_configurations.import.results
   import_statements = compact(concat([
     for i, alert in local.format_alerts :
-    "import 'mongodbatlas_alert_configuration.alert[\"${alert.event_type}-${try(alert.metric_threshold_config.metric_name, "")}\"]' '${alert.project_id}-${alert.alert_configuration_id}'"
+    "import 'mongodbatlas_alert_configuration.alert[\"${alert.event_type}-${try(alert.metric_threshold_config.metric_name, "")}${try(alert.metric_threshold_config.operator, alert.threshold_config.operator, "")}${try(alert.metric_threshold_config.threshold, alert.threshold_config.threshold, "")}\"]' '${alert.project_id}-${alert.alert_configuration_id}'"
     if alert.event_type != "AWS_ENCRYPTION_KEY_NEEDS_ROTATION"
     ], [
     for i, alert in local.format_alerts :
