@@ -1,11 +1,16 @@
 ##
-# (c) 2024 - Cloud Ops Works LLC - https://cloudops.works/
-#            On GitHub: https://github.com/cloudopsworks
-#            Distributed Under Apache v2.0 License
+# (c) 2021-2026
+#     Cloud Ops Works LLC - https://cloudops.works/
+#     Find us on:
+#       GitHub: https://github.com/cloudopsworks
+#       WebSite: https://cloudops.works
+#     Distributed Under Apache v2.0 License
 #
 
+data "aws_caller_identity" "current" {}
+
 locals {
-  atlas_region = upper(replace(data.aws_region.current.name, "-", "_"))
+  atlas_region = upper(replace(data.aws_region.current.id, "-", "_"))
 }
 
 resource "mongodbatlas_cloud_provider_access_setup" "this" {

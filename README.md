@@ -8,29 +8,26 @@
   -->
 [![README Header][readme_header_img]][readme_header_link]
 
-[![cloudopsworks][logo]](https://cloudops.works/)
+[![cloudopsworks][logo]](https://cloudopsworks.co/)
 
 # Terraform Module Mongo Atlas Project with AWS integrations
 
+ [![Latest Release](https://img.shields.io/github/release/cloudopsworks/terraform-module-mongoatlas-project.svg?style=for-the-badge)](https://github.com/cloudopsworks/terraform-module-mongoatlas-project/releases/latest) [![Last Updated](https://img.shields.io/github/last-commit/cloudopsworks/terraform-module-mongoatlas-project.svg?style=for-the-badge)](https://github.com/cloudopsworks/terraform-module-mongoatlas-project/commits)
 
 
-
-Terraform module for MongoDB Atlas project creation and management with AWS integrations. This module provides capabilities for creating and managing MongoDB Atlas projects, including network peering, security configurations, and AWS service integrations.
+Terraform/OpenTofu module for MongoDB Atlas project creation and management with AWS integrations.
+Provisions Atlas projects and optionally configures backup compliance policies, maintenance windows,
+IP access lists, AWS KMS encryption at rest, and alert configurations.
 
 
 ---
 
 This project is part of our comprehensive approach towards DevOps Acceleration. 
 [<img align="right" title="Share via Email" width="24" height="24" src="https://docs.cloudops.works/images/ionicons/ios-mail.svg"/>][share_email]
-[<img align="right" title="Share on Google+" width="24" height="24" src="https://docs.cloudops.works/images/ionicons/logo-googleplus.svg" />][share_googleplus]
 [<img align="right" title="Share on Facebook" width="24" height="24" src="https://docs.cloudops.works/images/ionicons/logo-facebook.svg" />][share_facebook]
 [<img align="right" title="Share on Reddit" width="24" height="24" src="https://docs.cloudops.works/images/ionicons/logo-reddit.svg" />][share_reddit]
 [<img align="right" title="Share on LinkedIn" width="24" height="24" src="https://docs.cloudops.works/images/ionicons/logo-linkedin.svg" />][share_linkedin]
-[<img align="right" title="Share on Twitter" width="24" height="24" src="https://docs.cloudops.works/images/ionicons/logo-twitter.svg" />][share_twitter]
-
-
-[![Terraform Open Source Modules](https://docs.cloudops.works/images/terraform-open-source-modules.svg)][terraform_modules]
-
+[<img align="right" title="Share on X" width="24" height="24" src="https://docs.cloudops.works/images/ionicons/logo-twitter.svg" />][share_twitter]
 
 
 It's 100% Open Source and licensed under the [APACHE2](LICENSE).
@@ -50,21 +47,21 @@ We have [*lots of terraform modules*][terraform_modules] that are Open Source an
 
 ## Introduction
 
-This Terraform module enables automated provisioning and management of MongoDB Atlas projects with AWS infrastructure integration. It provides a comprehensive solution for:
+This module automates the full lifecycle of a MongoDB Atlas project and its AWS-side supporting
+infrastructure. It is designed to be consumed via Terragrunt and follows the CloudOpsWorks
+structured-variable convention — all feature flags and settings are grouped under a single
+`settings` object for clean, version-controlled configuration.
 
-- MongoDB Atlas project creation and configuration
-- Network peering between AWS VPC and Atlas clusters
-- IAM role configuration for secure access
-- Project IP access list management
-- Team and user access management
-- API key configuration for project access
-- Multi-region support for global deployments
-- Custom VPC CIDR block configuration
-- Automated IAM role and policy management
-- Project-level security settings
-- Cross-region VPC peering
-- Team-based access control with granular permissions
-- IP whitelist management for enhanced security
+Key capabilities:
+
+| Feature | Description |
+|---|---|
+| **Project management** | Create and configure a MongoDB Atlas project within an org |
+| **Backup compliance** | Enforce hourly / daily / weekly / monthly / yearly / on-demand snapshot policies |
+| **Maintenance window** | Schedule and optionally auto-defer Atlas maintenance windows |
+| **IP access list** | Manage per-entry allow-lists by IP, CIDR block, or AWS security group |
+| **Encryption at rest** | Provision AWS KMS key + IAM role and wire up Atlas Customer-Managed Keys |
+| **Alert configurations** | Define any number of Atlas alert rules with flexible notification routing |
 
 ## Usage
 
@@ -73,193 +70,7 @@ This Terraform module enables automated provisioning and management of MongoDB A
 Instead pin to the release tag (e.g. `?ref=vX.Y.Z`) of one of our [latest releases](https://github.com/cloudopsworks/terraform-module-mongoatlas-project/releases).
 
 
-To use this module, you need to configure the following provider requirements:
-
-```hcl
-terraform {
-  required_providers {
-    mongodbatlas = {
-      source = "mongodb/mongodbatlas"
-    }
-    aws = {
-      source = "hashicorp/aws"
-    }
-  }
-}
-```
-
-Key variables for configuration:
-- `project_name`: Name of the MongoDB Atlas project
-- `org_id`: MongoDB Atlas organization ID
-- `region`: AWS region for VPC peering
-- `vpc_id`: AWS VPC ID for peering connection
-- `team_ids`: List of team IDs for project access
-- `ip_addresses`: List of IP addresses for access list
-
-```yaml
-settings:
-  default_alerts_settings: true | false
-  collect_database_specifics_statistics_enabled: true | false
-  data_explorer_enabled: true | false
-  extended_storage_sizes_enabled: true | false
-  performance_advisor_enabled: true | false
-  schema_advisor_enabled: true | false
-  backup_compliance:
-    enabled: true | false  (default: false)
-    authorized_user:
-      email: string
-      first_name: string
-      last_name: string
-    copy_protection_enabled: true | false (default: false)
-    pit_enabled: true | false (default: false)
-    encryption_at_rest_enabled: true | false (default: false)
-    restore_window_days: number (default: 7)
-    hourly:
-      interval: number (default: 1)
-      retention_unit: string (default: "days")
-      retention_value: number (default: 1)
-    daily:
-      interval: number (default: 1)
-      retention_unit: string (default: "days")
-      retention_value: number (default: 7)
-    weekly:
-      interval: number (default: 1)
-      retention_unit: string (default: "weeks")
-      retention_value: number (default: 4)
-    monthly:
-      interval: number (default: 1)
-      retention_unit: string (default: "months")
-      retention_value: number (default: 12)
-    yearly:
-      interval: number (default: 1)
-      retention_unit: string (default: "years")
-      retention_value: number (default: 2)
-    on_demand:
-      interval: number (default: 1)
-      retention_unit: string (default: "days")
-      retention_value: number (default: 7)
- maintenance:
-   enabled: true | false (default: false)
-   day_of_week: string (default: 1 "Sunday")
-   hour_of_day: number (default: 0)
-   start_asap: true | false (default: null)
-   defer: true | false (default: null)
-   auto_defer: true | false (default: null)
-   auto_defer_once_enabled: true | false (default: null)
- access_list:
-  <id>:
-    comment: string (optional, item comment)
-    ip_address: string (optional, conflicts with aws_security_group & cidr_block)
-    aws_security_group: string (optional, conflicts with ip_address & cidr_block)
-    cidr_block: string (optional, conflicts with ip_address & aws_security_group)
-encryption_at_rest:
-  enabled: true | false (default: false)
-  deletion_window_in_days: number (default: 7)
-  enable_key_rotation: true | false (default: true)
-  rotation_period_in_days: number (default: 90)
-  multi_region: true | false (default: false)
-alerts:
-  - event_type: "string" # Name of the alert configuration  - https://www.mongodb.com/docs/api/doc/atlas-admin-api-v2/operation/operation-createalertconfiguration
-    enabled: true | false # (default: true)
-    notifications:
-      - type_name: "string" # Notification type name - https://www.mongodb.com/docs/api/doc/atlas-admin-api-v2/operation/operation-createalertconfiguration
-        roles: ["string"] # Roles - https://www.mongodb.com/docs/api/doc/atlas-admin-api-v2/operation/operation-createalertconfiguration
-        api_token: "string" # (optional) Slack API token. Required for the SLACK notifications type. If the token later becomes invalid, Atlas sends an email to the project owner and eventually removes the token
-        channel_name: "string" # (optional) Slack channel name. Required for the SLACK notifications type
-        datadog_api_key: "string" # (optional) Datadog API key. Required for the DATADOG notifications type
-        datadog_region: "string" # (optional) Datadog region. Required for the DATADOG notifications type
-        delay_min: number # (optional) The delay, in minutes, between the time the alert condition is met and the time Atlas sends the alert notification
-        email_address: "string" # (optional) Email address. Required for the EMAIL notifications type
-        email_enabled: true | false # (optional) Flag that indicates whether to send email notifications to the project owner. Required for the PROJECT_OWNER notifications type
-        interval_min: number # (optional) The interval, in minutes, at which Atlas repeats the alert notification while the alert condition persists.
-        mobile_number: "string" # (optional) Mobile number. Required for the SMS notifications type
-        ops_genie_api_key: "string" # (optional) OpsGenie API key. Required for the OPS_GENIE notifications type
-        ops_genie_region: "string" # (optional) OpsGenie region.
-        service_key: "string" # (optional) Service key. Required for the PAGER_DUTY notifications type
-        sms_enabled: true | false # (optional) Flag that indicates whether to send SMS notifications to the project owner. Required for the PROJECT_OWNER notifications type
-        team_id: "string" # (optional) The ID of the team that receives the alert notification. Required for the TEAMS notifications type
-        team_name: "string" # (optional) The name of the team that receives the alert notification. Required for the TEAMS notifications type
-        integration_id: "string" # (optional) The ID of the third-party integration that notifies the team. Required for the TEAMS notifications type
-        notifier_id: "string" # (optional) The ID of the third-party integration that notifies the team. Required for the TEAMS notifications type
-        username: "string" # (optional) Username for Atlas number.
-        victor_ops_api_key: "string" # (optional) VictorOps API key. Required for the VICTOR_OPS notifications type
-        victor_ops_routing_key: "string" # (optional) VictorOps routing key
-        webhook_secret: "string" # (optional) Webhook secret. Required for the WEBHOOK notifications type
-        webhook_url: "string" # (optional) Webhook URL. Required for the WEBHOOK notifications type
-        microsoft_teams_webhook_url: "string" # (optional) Microsoft Teams webhook URL. Required for the MICROSOFT_TEAMS notifications type
-    matchers:
-      - field_name: "string" # (optional) Field name
-        operator: "string" # (optional) Operator
-        value: "string" # (optional) Value
-    metric_threshold_config:
-      metric_name: "string" # (optional) Metric name
-      operator: "string" # (optional) Operator
-      threshold: number # (optional) Threshold
-      units: "string" # (optional) Units
-      mode: "string" # (optional) Mode
-    metric_threshold:
-      operator: "string" # (optional) Operator
-      threshold: number # (optional) Threshold
-      units: "string" # (optional) Units
-  ```
-
-## Quick Start
-
-1. Configure your MongoDB Atlas API credentials:
-   ```bash
-   export MONGODB_ATLAS_PUBLIC_KEY="your-public-key"
-   export MONGODB_ATLAS_PRIVATE_KEY="your-private-key"
-   export AWS_ACCESS_KEY_ID="your-aws-access-key"
-   export AWS_SECRET_ACCESS_KEY="your-aws-secret-key"
-   ```
-
-2. Create a basic terragrunt.hcl file:
-   ```hcl
-   terraform {
-     source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v1.2.8"
-   }
-
-   inputs = {
-     project_name = "quickstart-project"
-     org_id      = "your-org-id"
-     region      = "us-east-1"
-     vpc_id      = "your-vpc-id"
-   }
-   ```
-
-3. Create provider.tf file:
-   ```hcl
-   terraform {
-     required_providers {
-       mongodbatlas = {
-         source  = "mongodb/mongodbatlas"
-         version = "~> 1.0"
-       }
-       aws = {
-         source  = "hashicorp/aws"
-         version = "~> 4.0"
-       }
-     }
-   }
-   ```
-
-4. Initialize and apply:
-   ```bash
-   terragrunt init
-   terragrunt plan
-   terragrunt apply
-   ```
-
-5. Verify project creation:
-   ```bash
-   terragrunt output project_id
-   terragrunt output connection_strings
-   ```
-
-
-## Examples
-
-Basic Terragrunt configuration:
+Consume this module via Terragrunt. Create a `terragrunt.hcl` in your environment directory:
 
 ```hcl
 include "root" {
@@ -267,78 +78,343 @@ include "root" {
 }
 
 terraform {
-  source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v1.2.8"
+  source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v2.0.0"
 }
 
 inputs = {
-  project_name = "my-atlas-project"
-  org_id      = "5e7b98765432"
-  region      = "us-east-1"
-  vpc_id      = "vpc-1234567890"
-  team_ids    = ["team1", "team2"]
-  ip_addresses = ["10.0.0.0/24"]
+  # ── Identity ────────────────────────────────────────────────────────────────
+  org = {
+    organization_name = "my-company"   # (Required) Used for tagging and name generation.
+    organization_unit = "platform"     # (Required) Business unit abbreviation.
+    environment_type  = "production"   # (Required) Environment tier (e.g. production, staging).
+    environment_name  = "prod"         # (Required) Short environment label.
+  }
+  spoke_def = "001"                    # (Optional) Spoke identifier. Default: "001".
+  is_hub    = false                    # (Optional) Mark this deployment as a hub. Default: false.
+
+  # ── Project naming ──────────────────────────────────────────────────────────
+  # Use `name` for an explicit name, or `name_prefix` to prepend to the auto-generated name.
+  name_prefix     = "myapp"            # (Optional) Prefix for the auto-generated project name.
+  # name          = "my-atlas-project" # (Optional) Explicit project name; overrides name_prefix.
+
+  # ── Atlas organisation ───────────────────────────────────────────────────────
+  # Provide exactly one of organization_id (preferred) or organization_name.
+  organization_id   = "5e7b987600000000000000ab"  # (Optional) Atlas org ID.
+  # organization_name = "my-org-name"              # (Optional) Atlas org name (resolved via data source).
+
+  # ── Feature settings ─────────────────────────────────────────────────────────
+  settings = {
+    # Project feature flags
+    default_alerts_settings                        = true   # (Optional) Keep Atlas default alert settings.
+    collect_database_specifics_statistics_enabled  = true   # (Optional) Collect DB-specific statistics.
+    data_explorer_enabled                          = true   # (Optional) Enable Data Explorer UI.
+    extended_storage_sizes_enabled                 = false  # (Optional) Allow extended storage tiers.
+    performance_advisor_enabled                    = true   # (Optional) Enable Performance Advisor.
+    schema_advisor_enabled                         = true   # (Optional) Enable Schema Advisor.
+
+    # Backup compliance policy (immutable once enabled — handle with care)
+    backup_compliance = {
+      enabled                    = false           # (Optional) Enforce backup compliance. Default: false.
+      authorized_user = {
+        email      = "dba@example.com"             # (Required when enabled) Authorised user email.
+        first_name = "Jane"                        # (Required when enabled) First name.
+        last_name  = "Doe"                         # (Required when enabled) Last name.
+      }
+      copy_protection_enabled    = false           # (Optional) Prevent backup copy deletion. Default: false.
+      pit_enabled                = false           # (Optional) Enable Point-in-Time recovery. Default: false.
+      encryption_at_rest_enabled = false           # (Optional) Require encrypted backups. Default: false.
+      restore_window_days        = 7               # (Optional) Restore window in days. Default: 7.
+      hourly = {
+        interval       = 6                         # (Optional) Snapshot every N hours. Default: 1.
+        retention_unit  = "days"                   # (Optional) Retention unit. Values: "days". Default: "days".
+        retention_value = 2                        # (Optional) Retention duration. Default: 1.
+      }
+      daily = {
+        interval        = 1                        # (Optional) Must be 1. Default: 1.
+        retention_unit  = "days"                   # (Optional) Retention unit. Values: "days". Default: "days".
+        retention_value = 7                        # (Optional) Retention duration. Default: 7.
+      }
+      weekly = {
+        interval        = 6                        # (Optional) Day of week (1=Sunday … 7=Saturday). Default: 1.
+        retention_unit  = "weeks"                  # (Optional) Retention unit. Values: "weeks". Default: "weeks".
+        retention_value = 4                        # (Optional) Retention duration. Default: 4.
+      }
+      monthly = {
+        interval        = 28                       # (Optional) Day of month (1–28). Default: 1.
+        retention_unit  = "months"                 # (Optional) Retention unit. Values: "months". Default: "months".
+        retention_value = 12                       # (Optional) Retention duration. Default: 12.
+      }
+      yearly = {
+        interval        = 1                        # (Optional) Month of year (1–12). Default: 1.
+        retention_unit  = "years"                  # (Optional) Retention unit. Values: "years". Default: "years".
+        retention_value = 2                        # (Optional) Retention duration. Default: 2.
+      }
+      on_demand = {
+        interval        = 0                        # (Optional) Must be 0. Default: 1.
+        retention_unit  = "days"                   # (Optional) Retention unit. Values: "days". Default: "days".
+        retention_value = 7                        # (Optional) Retention duration. Default: 7.
+      }
+    }
+
+    # Maintenance window
+    maintenance = {
+      enabled                 = true               # (Optional) Enable scheduled maintenance. Default: false.
+      day_of_week             = 7                  # (Optional) Day of week (1=Sunday … 7=Saturday). Default: 1.
+      hour_of_day             = 3                  # (Optional) Hour in UTC (0–23). Default: 0.
+      defer                   = false              # (Optional) Defer next maintenance occurrence. Default: null.
+      auto_defer              = false              # (Optional) Auto-defer maintenance. Default: null.
+      auto_defer_once_enabled = false              # (Optional) Auto-defer once. Default: null.
+    }
+
+    # IP access list (map keyed by a unique entry ID)
+    access_list = {
+      office = {
+        cidr_block = "203.0.113.0/24"             # (Optional) CIDR block. Conflicts with ip_address and aws_security_group.
+        comment    = "Office network"             # (Optional) Human-readable label.
+      }
+      bastion = {
+        ip_address = "198.51.100.5"               # (Optional) Single IP. Conflicts with cidr_block and aws_security_group.
+        comment    = "Bastion host"
+      }
+      # sg_entry = {
+      #   aws_security_group = "sg-0abc123"       # (Optional) AWS SG ID. Conflicts with ip_address and cidr_block.
+      #   comment            = "App security group"
+      # }
+    }
+
+    # AWS KMS encryption at rest
+    encryption_at_rest = {
+      enabled                  = false             # (Optional) Create KMS key and enable CMK encryption. Default: false.
+      deletion_window_in_days  = 7                 # (Optional) KMS key pending-deletion window (7–30). Default: 7.
+      enable_key_rotation      = true              # (Optional) Enable automatic key rotation. Default: true.
+      rotation_period_in_days  = 90                # (Optional) Rotation period in days (90–2560). Default: 90.
+      multi_region             = false             # (Optional) Create a multi-region KMS key. Default: false.
+    }
+
+    # Alert configurations (list; AWS_ENCRYPTION_KEY_NEEDS_ROTATION is managed separately)
+    alerts = [
+      {
+        event_type = "REPLICATION_OPLOG_WINDOW_RUNNING_OUT"  # (Required) Atlas event type.
+        enabled    = true                                     # (Optional) Enable this alert. Default: true.
+        notifications = [
+          {
+            type_name     = "GROUP"                           # (Required) Notification target type.
+            roles         = ["GROUP_OWNER"]                   # (Optional) Project roles to notify.
+            interval_min  = 60                                # (Optional) Re-notification interval (minutes).
+            delay_min     = 0                                 # (Optional) Delay before first notification (minutes).
+            email_enabled = true                              # (Optional) Send email. Required for PROJECT_OWNER type.
+          }
+        ]
+        threshold_config = {
+          operator  = "LESS_THAN"                            # (Optional) Values: GREATER_THAN, LESS_THAN.
+          threshold = 1                                      # (Optional) Numeric threshold.
+          units     = "HOURS"                                # (Optional) Threshold units.
+        }
+      }
+    ]
+  }
+
+  extra_tags = {
+    Team    = "platform"
+    CostCenter = "12345"
+  }
 }
 ```
 
-Multi-region configuration:
+## Quick Start
+
+1. Export Atlas and AWS credentials:
+   ```bash
+   export MONGODB_ATLAS_PUBLIC_KEY="your-public-key"
+   export MONGODB_ATLAS_PRIVATE_KEY="your-private-key"
+   export AWS_PROFILE="your-aws-profile"   # or set AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+   ```
+
+2. Create `terragrunt.hcl` in your environment directory:
+   ```hcl
+   include "root" {
+     path = find_in_parent_folders()
+   }
+
+   terraform {
+     source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v2.0.0"
+   }
+
+   inputs = {
+     org = {
+       organization_name = "my-company"
+       organization_unit = "platform"
+       environment_type  = "production"
+       environment_name  = "prod"
+     }
+     name_prefix     = "myapp"
+     organization_id = "your-atlas-org-id"
+     settings        = {}
+   }
+   ```
+
+3. Initialize and apply:
+   ```bash
+   terragrunt init
+   terragrunt plan
+   terragrunt apply
+   ```
+
+4. Verify the outputs:
+   ```bash
+   terragrunt output project_id
+   terragrunt output project_name
+   ```
+
+**Contributing / branching workflow (GitHub Flow):**
+
+All changes flow through feature branches merged into `master` via pull request.
+Include a semver annotation in your commit message or PR description to trigger the
+correct version bump in CI:
+
+| Change type | Annotation |
+|---|---|
+| Breaking / major | `+semver: major` or `+semver: breaking` |
+| New feature / minor | `+semver: minor` or `+semver: feature` |
+| Bug fix / patch | `+semver: fix` or `+semver: patch` |
+
+```bash
+# Start a feature branch
+make gitflow/feature/start-no-develop:my-feature
+
+# Validate
+make fmt
+make lint
+
+# Open a PR back to master
+make gitflow/feature/finish-no-develop:my-feature
+```
+
+
+## Examples
+
+**Minimal project — no optional features:**
 
 ```hcl
+include "root" {
+  path = find_in_parent_folders()
+}
+
 terraform {
-  source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v1.2.8"
+  source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v2.0.0"
 }
 
 inputs = {
-  project_name = "multi-region-project"
-  org_id      = "5e7b98765432"
-  regions     = ["us-east-1", "eu-west-1"]
-  vpc_configs = {
-    primary = {
-      vpc_id = "vpc-1234567890"
-      cidr   = "10.0.0.0/16"
-    }
-    secondary = {
-      vpc_id = "vpc-0987654321"
-      cidr   = "172.16.0.0/16"
-    }
+  org = {
+    organization_name = "acme"
+    organization_unit = "platform"
+    environment_type  = "production"
+    environment_name  = "prod"
   }
-  team_ids    = ["team1", "team2"]
-  ip_addresses = ["10.0.0.0/24", "172.16.0.0/24"]
+  name_prefix     = "myapp"
+  organization_id = "5e7b987600000000000000ab"
+  settings        = {}
 }
 ```
 
-Advanced security configuration:
+**Project with encryption at rest and maintenance window:**
 
 ```hcl
+include "root" {
+  path = find_in_parent_folders()
+}
+
 terraform {
-  source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v1.2.8"
+  source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v2.0.0"
 }
 
 inputs = {
-  project_name = "secure-project"
-  org_id      = "5e7b98765432"
-  region      = "us-east-1"
-  vpc_id      = "vpc-1234567890"
-  enable_security_features = true
-  custom_roles = {
-    readonly = {
-      role_name = "ReadOnly"
-      actions   = ["READ"]
+  org = {
+    organization_name = "acme"
+    organization_unit = "platform"
+    environment_type  = "production"
+    environment_name  = "prod"
+  }
+  name_prefix     = "myapp"
+  organization_id = "5e7b987600000000000000ab"
+
+  settings = {
+    default_alerts_settings     = true
+    performance_advisor_enabled = true
+    schema_advisor_enabled      = true
+
+    maintenance = {
+      enabled     = true
+      day_of_week = 7   # Saturday
+      hour_of_day = 3   # 03:00 UTC
     }
-    admin = {
-      role_name = "Admin"
-      actions   = ["READ", "WRITE", "DELETE"]
+
+    encryption_at_rest = {
+      enabled                 = true
+      deletion_window_in_days = 14
+      enable_key_rotation     = true
+      rotation_period_in_days = 90
+    }
+
+    access_list = {
+      vpn = {
+        cidr_block = "10.10.0.0/16"
+        comment    = "Corporate VPN"
+      }
     }
   }
-  ip_access_list = [
-    {
-      cidr_block = "10.0.0.0/24"
-      comment    = "Internal network"
-    },
-    {
-      ip_address = "203.0.113.1"
-      comment    = "Office IP"
+}
+```
+
+**Project with backup compliance policy:**
+
+```hcl
+include "root" {
+  path = find_in_parent_folders()
+}
+
+terraform {
+  source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v2.0.0"
+}
+
+inputs = {
+  org = {
+    organization_name = "acme"
+    organization_unit = "data"
+    environment_type  = "production"
+    environment_name  = "prod"
+  }
+  name_prefix     = "dataplatform"
+  organization_id = "5e7b987600000000000000ab"
+
+  settings = {
+    backup_compliance = {
+      enabled = true
+      authorized_user = {
+        email      = "dba@acme.com"
+        first_name = "Jane"
+        last_name  = "Doe"
+      }
+      pit_enabled             = true
+      copy_protection_enabled = true
+      restore_window_days     = 7
+      daily = {
+        interval        = 1
+        retention_unit  = "days"
+        retention_value = 7
+      }
+      weekly = {
+        interval        = 6
+        retention_unit  = "weeks"
+        retention_value = 4
+      }
+      monthly = {
+        interval        = 28
+        retention_unit  = "months"
+        retention_value = 12
+      }
     }
-  ]
+  }
 }
 ```
 
@@ -351,6 +427,7 @@ Available targets:
   help                                Help screen
   help/all                            Display help for all targets
   help/short                          This help short screen
+  init/%                              Initialize the project for a specific cloud provider: %S
   lint                                Lint terraform/opentofu code
   tag                                 Tag the current version
 
@@ -359,16 +436,16 @@ Available targets:
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 5.0 |
-| <a name="requirement_mongodbatlas"></a> [mongodbatlas](#requirement\_mongodbatlas) | ~> 1.21 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.7 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 6.35 |
+| <a name="requirement_mongodbatlas"></a> [mongodbatlas](#requirement\_mongodbatlas) | ~> 2.1 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 5.74.0 |
-| <a name="provider_mongodbatlas"></a> [mongodbatlas](#provider\_mongodbatlas) | 1.21.4 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.40.0 |
+| <a name="provider_mongodbatlas"></a> [mongodbatlas](#provider\_mongodbatlas) | 2.10.0 |
 
 ## Modules
 
@@ -384,7 +461,7 @@ Available targets:
 | [aws_iam_role_policy.kms](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
 | [aws_kms_alias.kms](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
 | [aws_kms_key.kms](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
-| [mongodbatlas_alert_configuration.alerts](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/alert_configuration) | resource |
+| [mongodbatlas_alert_configuration.alert](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/alert_configuration) | resource |
 | [mongodbatlas_alert_configuration.kms_alert](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/alert_configuration) | resource |
 | [mongodbatlas_backup_compliance_policy.this](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/backup_compliance_policy) | resource |
 | [mongodbatlas_cloud_provider_access_authorization.this](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/cloud_provider_access_authorization) | resource |
@@ -396,28 +473,32 @@ Available targets:
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_iam_policy_document.kms_assume_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.kms_key_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
-| [aws_iam_policy_document.kms_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
+| [mongodbatlas_alert_configurations.import](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/data-sources/alert_configurations) | data source |
 | [mongodbatlas_organizations.this](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/data-sources/organizations) | data source |
+| [mongodbatlas_roles_org_id.current](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/data-sources/roles_org_id) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_extra_tags"></a> [extra\_tags](#input\_extra\_tags) | n/a | `map(string)` | `{}` | no |
-| <a name="input_is_hub"></a> [is\_hub](#input\_is\_hub) | Establish this is a HUB or spoke configuration | `bool` | `false` | no |
-| <a name="input_name"></a> [name](#input\_name) | Name of the resource | `string` | `""` | no |
-| <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | Prefix for the name of the resources | `string` | `""` | no |
-| <a name="input_org"></a> [org](#input\_org) | n/a | <pre>object({<br/>    organization_name = string<br/>    organization_unit = string<br/>    environment_type  = string<br/>    environment_name  = string<br/>  })</pre> | n/a | yes |
-| <a name="input_organization_id"></a> [organization\_id](#input\_organization\_id) | (optional) The ID of the organization where the project will be created | `string` | `""` | no |
-| <a name="input_organization_name"></a> [organization\_name](#input\_organization\_name) | (optional) The name of the organization where the project will be created | `string` | `""` | no |
-| <a name="input_settings"></a> [settings](#input\_settings) | (optional) The backup compliance policy | `any` | `{}` | no |
-| <a name="input_spoke_def"></a> [spoke\_def](#input\_spoke\_def) | n/a | `string` | `"001"` | no |
+| <a name="input_extra_tags"></a> [extra\_tags](#input\_extra\_tags) | Extra tags to add to the resources | `map(string)` | `{}` | no |
+| <a name="input_generate_import"></a> [generate\_import](#input\_generate\_import) | (Optional) Generate OpenTofu import blocks for existing Atlas resources | `bool` | `false` | no |
+| <a name="input_is_hub"></a> [is\_hub](#input\_is\_hub) | Is this a hub or spoke configuration? | `bool` | `false` | no |
+| <a name="input_name"></a> [name](#input\_name) | (Optional) Explicit name for the MongoDB Atlas project; overrides name\_prefix | `string` | `""` | no |
+| <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | (Optional) Prefix for the name of the resources | `string` | `""` | no |
+| <a name="input_org"></a> [org](#input\_org) | Organization details | <pre>object({<br/>    organization_name = string<br/>    organization_unit = string<br/>    environment_type  = string<br/>    environment_name  = string<br/>  })</pre> | n/a | yes |
+| <a name="input_organization_id"></a> [organization\_id](#input\_organization\_id) | (Optional) The ID of the MongoDB Atlas organization where the project will be created | `string` | `""` | no |
+| <a name="input_organization_name"></a> [organization\_name](#input\_organization\_name) | (Optional) The name of the MongoDB Atlas organization where the project will be created | `string` | `""` | no |
+| <a name="input_settings"></a> [settings](#input\_settings) | (Optional) Module settings object controlling project features: backup compliance, maintenance window, IP access list, encryption at rest, and alert configurations | `any` | `{}` | no |
+| <a name="input_spoke_def"></a> [spoke\_def](#input\_spoke\_def) | Spoke ID Number, must be a 3 digit number | `string` | `"001"` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
+| <a name="output_imported_alert_json"></a> [imported\_alert\_json](#output\_imported\_alert\_json) | n/a |
+| <a name="output_imported_alert_statement"></a> [imported\_alert\_statement](#output\_imported\_alert\_statement) | n/a |
 | <a name="output_project_backup_policy_id"></a> [project\_backup\_policy\_id](#output\_project\_backup\_policy\_id) | n/a |
 | <a name="output_project_creation_timestamp"></a> [project\_creation\_timestamp](#output\_project\_creation\_timestamp) | n/a |
 | <a name="output_project_id"></a> [project\_id](#output\_project\_id) | n/a |
@@ -436,10 +517,9 @@ Available targets:
 
 File a GitHub [issue](https://github.com/cloudopsworks/terraform-module-mongoatlas-project/issues), send us an [email][email] or join our [Slack Community][slack].
 
-[![README Commercial Support][readme_commercial_support_img]][readme_commercial_support_link]
 
 ## DevOps Tools
-
+[]()
 ## Slack Community
 
 
@@ -460,7 +540,7 @@ Please use the [issue tracker](https://github.com/cloudopsworks/terraform-module
 
 ## Copyrights
 
-Copyright © 2024-2025 [Cloud Ops Works LLC](https://cloudops.works)
+Copyright © 2021-2026-2026 [Cloud Ops Works LLC](https://cloudops.works)
 
 
 
@@ -517,32 +597,31 @@ This project is maintained by [Cloud Ops Works LLC][website].
 [![README Footer][readme_footer_img]][readme_footer_link]
 [![Beacon][beacon]][website]
 
-  [logo]: https://cloudops.works/logo-300x69.svg
-  [docs]: https://cowk.io/docs?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=docs
-  [website]: https://cowk.io/homepage?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=website
-  [github]: https://cowk.io/github?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=github
-  [jobs]: https://cowk.io/jobs?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=jobs
-  [hire]: https://cowk.io/hire?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=hire
-  [slack]: https://cowk.io/slack?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=slack
-  [linkedin]: https://cowk.io/linkedin?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=linkedin
-  [twitter]: https://cowk.io/twitter?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=twitter
-  [testimonial]: https://cowk.io/leave-testimonial?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=testimonial
-  [office_hours]: https://cloudops.works/office-hours?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=office_hours
-  [newsletter]: https://cowk.io/newsletter?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=newsletter
-  [email]: https://cowk.io/email?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=email
-  [commercial_support]: https://cowk.io/commercial-support?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=commercial_support
-  [we_love_open_source]: https://cowk.io/we-love-open-source?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=we_love_open_source
-  [terraform_modules]: https://cowk.io/terraform-modules?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=terraform_modules
-  [readme_header_img]: https://cloudops.works/readme/header/img
-  [readme_header_link]: https://cloudops.works/readme/header/link?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=readme_header_link
-  [readme_footer_img]: https://cloudops.works/readme/footer/img
-  [readme_footer_link]: https://cloudops.works/readme/footer/link?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=readme_footer_link
-  [readme_commercial_support_img]: https://cloudops.works/readme/commercial-support/img
-  [readme_commercial_support_link]: https://cloudops.works/readme/commercial-support/link?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=readme_commercial_support_link
-  [share_twitter]: https://twitter.com/intent/tweet/?text=Terraform+Module+Mongo+Atlas+Project+with+AWS+integrations&url=https://github.com/cloudopsworks/terraform-module-mongoatlas-project
+  [logo]: https://cloudopsworks.co/images/main-logo.png
+  [docs]: https://cloudopsworks.co/resources?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=docs
+  [website]: https://cloudopsworks.co?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=website
+  [github]: https://cloudopsworks.co/github?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=github
+  [jobs]: https://cloudopsworks.co/jobs?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=jobs
+  [hire]: https://cloudopsworks.co/hire?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=hire
+  [slack]: https://cloudopsworks.co/slack?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=slack
+  [linkedin]: https://cloudopsworks.co/linkedin?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=linkedin
+  [x]: https://cloudopsworks.co/x?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=x
+  [testimonial]: https://cloudopsworks.co/case-studies?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=testimonial
+  [office_hours]: https://cloudopsworks.co/office-hours?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=office_hours
+  [newsletter]: https://cloudopsworks.co/resources?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=newsletter
+  [email]: https://cloudopsworks.co/contact?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=email
+  [commercial_support]: https://cloudopsworks.co/services?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=commercial_support
+  [we_love_open_source]: https://cloudopsworks.co/open-source?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=we_love_open_source
+  [terraform_modules]: https://cloudopsworks.co/open-source?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=terraform_modules
+  [readme_header_img]: https://cloudopsworks.co/images/readme-header.png
+  [readme_header_link]: https://cloudopsworks.co/readme/header/link?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=readme_header_link
+  [readme_footer_img]: https://cloudopsworks.co/images/main-logo-footer.png
+  [readme_footer_link]: https://cloudopsworks.co/readme/footer/link?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=readme_footer_link
+  [readme_commercial_support_img]: https://cloudopsworks.co/readme/commercial-support/img
+  [readme_commercial_support_link]: https://cloudopsworks.co/readme/commercial-support/link?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=readme_commercial_support_link
+  [share_twitter]: https://x.com/intent/tweet/?text=Terraform+Module+Mongo+Atlas+Project+with+AWS+integrations&url=https://github.com/cloudopsworks/terraform-module-mongoatlas-project
   [share_linkedin]: https://www.linkedin.com/shareArticle?mini=true&title=Terraform+Module+Mongo+Atlas+Project+with+AWS+integrations&url=https://github.com/cloudopsworks/terraform-module-mongoatlas-project
   [share_reddit]: https://reddit.com/submit/?url=https://github.com/cloudopsworks/terraform-module-mongoatlas-project
   [share_facebook]: https://facebook.com/sharer/sharer.php?u=https://github.com/cloudopsworks/terraform-module-mongoatlas-project
-  [share_googleplus]: https://plus.google.com/share?url=https://github.com/cloudopsworks/terraform-module-mongoatlas-project
   [share_email]: mailto:?subject=Terraform+Module+Mongo+Atlas+Project+with+AWS+integrations&body=https://github.com/cloudopsworks/terraform-module-mongoatlas-project
-  [beacon]: https://ga-beacon.cloudops.works/G-7XWMFVFXZT/cloudopsworks/terraform-module-mongoatlas-project?pixel&cs=github&cm=readme&an=terraform-module-mongoatlas-project
+  [beacon]: https://ga-beacon.cloudospworks.co/G-QMZVYYN2VN/cloudopsworks/terraform-module-mongoatlas-project?pixel&cs=github&cm=readme&an=terraform-module-mongoatlas-project
