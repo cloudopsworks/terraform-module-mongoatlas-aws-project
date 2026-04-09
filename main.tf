@@ -1,7 +1,10 @@
 ##
-# (c) 2024 - Cloud Ops Works LLC - https://cloudops.works/
-#            On GitHub: https://github.com/cloudopsworks
-#            Distributed Under Apache v2.0 License
+# (c) 2021-2026
+#     Cloud Ops Works LLC - https://cloudops.works/
+#     Find us on:
+#       GitHub: https://github.com/cloudopsworks
+#       WebSite: https://cloudops.works
+#     Distributed Under Apache v2.0 License
 #
 
 locals {
@@ -92,7 +95,6 @@ resource "mongodbatlas_maintenance_window" "this" {
   project_id              = mongodbatlas_project.this.id
   day_of_week             = try(var.settings.maintenance.day_of_week, 1)
   hour_of_day             = try(var.settings.maintenance.hour_of_day, 0)
-  start_asap              = try(var.settings.maintenance.start_asap, null)
   defer                   = try(var.settings.maintenance.defer, null)
   auto_defer              = try(var.settings.maintenance.auto_defer, null)
   auto_defer_once_enabled = try(var.settings.maintenance.auto_defer_once_enabled, null)
