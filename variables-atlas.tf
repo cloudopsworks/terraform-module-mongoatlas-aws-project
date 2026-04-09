@@ -8,142 +8,152 @@
 #
 
 variable "name_prefix" {
-  description = "Prefix for the name of the resources"
+  # (Optional) Prefix prepended to the auto-generated project name when `name` is not set. Default: "".
+  description = "(Optional) Prefix for the name of the resources"
   type        = string
   default     = ""
 }
 
 variable "name" {
-  description = "Name of the resource"
+  # (Optional) Explicit name for the MongoDB Atlas project. When set, overrides `name_prefix`. Default: "".
+  description = "(Optional) Explicit name for the MongoDB Atlas project; overrides name_prefix"
   type        = string
   default     = ""
 }
 
 variable "organization_name" {
-  description = "(optional) The name of the organization where the project will be created"
+  # (Optional) Name of the MongoDB Atlas organization. Used to look up the org ID when `organization_id` is not provided.
+  description = "(Optional) The name of the MongoDB Atlas organization where the project will be created"
   type        = string
   default     = ""
 }
 
 variable "organization_id" {
-  description = "(optional) The ID of the organization where the project will be created"
+  # (Optional) Direct MongoDB Atlas organization ID. Takes precedence over `organization_name` lookup.
+  description = "(Optional) The ID of the MongoDB Atlas organization where the project will be created"
   type        = string
   default     = ""
 }
 
-## Settings YAML format:
+## Settings object structure (all keys are optional unless noted):
+#
 # settings:
-#   default_alerts_settings: true | false
-#   collect_database_specifics_statistics_enabled: true | false
-#   data_explorer_enabled: true | false
-#   extended_storage_sizes_enabled: true | false
-#   performance_advisor_enabled: true | false
-#   schema_advisor_enabled: true | false
+#   default_alerts_settings: true | false          # (Optional) Enable default alert settings for the project.
+#   collect_database_specifics_statistics_enabled: true | false  # (Optional) Collect database-specific statistics.
+#   data_explorer_enabled: true | false            # (Optional) Enable Data Explorer.
+#   extended_storage_sizes_enabled: true | false   # (Optional) Enable extended storage sizes.
+#   performance_advisor_enabled: true | false      # (Optional) Enable Performance Advisor.
+#   schema_advisor_enabled: true | false           # (Optional) Enable Schema Advisor.
+#
 #   backup_compliance:
-#     enabled: true | false  (default: false)
+#     enabled: true | false                        # (Optional) Enable backup compliance policy. Default: false.
 #     authorized_user:
-#       email: string
-#       first_name: string
-#       last_name: string
-#     copy_protection_enabled: true | false (default: false)
-#     pit_enabled: true | false (default: false)
-#     encryption_at_rest_enabled: true | false (default: false)
-#     restore_window_days: number (default: 7)
+#       email: string                              # (Required) Email of the authorized user.
+#       first_name: string                         # (Required) First name of the authorized user.
+#       last_name: string                          # (Required) Last name of the authorized user.
+#     copy_protection_enabled: true | false        # (Optional) Enable copy protection. Default: false.
+#     pit_enabled: true | false                    # (Optional) Enable Point-in-Time recovery. Default: false.
+#     encryption_at_rest_enabled: true | false     # (Optional) Require encryption at rest. Default: false.
+#     restore_window_days: number                  # (Optional) Restore window in days. Default: 7.
 #     hourly:
-#       interval: number (default: 1)
-#       retention_unit: string (default: "days")
-#       retention_value: number (default: 1)
+#       interval: number                           # (Optional) Frequency interval (hours). Default: 1.
+#       retention_unit: string                     # (Optional) Retention unit. Values: "days". Default: "days".
+#       retention_value: number                    # (Optional) Retention value. Default: 1.
 #     daily:
-#       interval: number (default: 1)
-#       retention_unit: string (default: "days")
-#       retention_value: number (default: 7)
+#       interval: number                           # (Optional) Frequency interval (days). Default: 1.
+#       retention_unit: string                     # (Optional) Retention unit. Values: "days". Default: "days".
+#       retention_value: number                    # (Optional) Retention value. Default: 7.
 #     weekly:
-#       interval: number (default: 1)
-#       retention_unit: string (default: "weeks")
-#       retention_value: number (default: 4)
+#       interval: number                           # (Optional) Day of week (1=Sunday … 7=Saturday). Default: 1.
+#       retention_unit: string                     # (Optional) Retention unit. Values: "weeks". Default: "weeks".
+#       retention_value: number                    # (Optional) Retention value. Default: 4.
 #     monthly:
-#       interval: number (default: 1)
-#       retention_unit: string (default: "months")
-#       retention_value: number (default: 12)
+#       interval: number                           # (Optional) Day of month (1–28). Default: 1.
+#       retention_unit: string                     # (Optional) Retention unit. Values: "months". Default: "months".
+#       retention_value: number                    # (Optional) Retention value. Default: 12.
 #     yearly:
-#       interval: number (default: 1)
-#       retention_unit: string (default: "years")
-#       retention_value: number (default: 2)
+#       interval: number                           # (Optional) Month of year (1–12). Default: 1.
+#       retention_unit: string                     # (Optional) Retention unit. Values: "years". Default: "years".
+#       retention_value: number                    # (Optional) Retention value. Default: 2.
 #     on_demand:
-#       interval: number (default: 1)
-#       retention_unit: string (default: "days")
-#       retention_value: number (default: 7)
-#  maintenance:
-#    enabled: true | false (default: false)
-#    day_of_week: string (default: 1 "Sunday")
-#    hour_of_day: number (default: 0)
-#    start_asap: true | false (default: null)
-#    defer: true | false (default: null)
-#    auto_defer: true | false (default: null)
-#    auto_defer_once_enabled: true | false (default: null)
-#  access_list:
-#   <id>:
-#     comment: string (optional, item comment)
-#     ip_address: string (optional, conflicts with aws_security_group & cidr_block)
-#     aws_security_group: string (optional, conflicts with ip_address & cidr_block)
-#     cidr_block: string (optional, conflicts with ip_address & aws_security_group)
-# encryption_at_rest:
-#   enabled: true | false (default: false)
-#   deletion_window_in_days: number (default: 7)
-#   enable_key_rotation: true | false (default: true)
-#   rotation_period_in_days: number (default: 90)
-#   multi_region: true | false (default: false)
-# alerts:
-#   - event_type: "string" # Name of the alert configuration  - https://www.mongodb.com/docs/api/doc/atlas-admin-api-v2/operation/operation-createalertconfiguration
-#     enabled: true | false # (default: true)
-#     notifications:
-#       - type_name: "string" # Notification type name - https://www.mongodb.com/docs/api/doc/atlas-admin-api-v2/operation/operation-createalertconfiguration
-#         roles: ["string"] # Roles - https://www.mongodb.com/docs/api/doc/atlas-admin-api-v2/operation/operation-createalertconfiguration
-#         api_token: "string" # (optional) Slack API token. Required for the SLACK notifications type. If the token later becomes invalid, Atlas sends an email to the project owner and eventually removes the token
-#         channel_name: "string" # (optional) Slack channel name. Required for the SLACK notifications type
-#         datadog_api_key: "string" # (optional) Datadog API key. Required for the DATADOG notifications type
-#         datadog_region: "string" # (optional) Datadog region. Required for the DATADOG notifications type
-#         delay_min: number # (optional) The delay, in minutes, between the time the alert condition is met and the time Atlas sends the alert notification
-#         email_address: "string" # (optional) Email address. Required for the EMAIL notifications type
-#         email_enabled: true | false # (optional) Flag that indicates whether to send email notifications to the project owner. Required for the PROJECT_OWNER notifications type
-#         interval_min: number # (optional) The interval, in minutes, at which Atlas repeats the alert notification while the alert condition persists.
-#         mobile_number: "string" # (optional) Mobile number. Required for the SMS notifications type
-#         ops_genie_api_key: "string" # (optional) OpsGenie API key. Required for the OPS_GENIE notifications type
-#         ops_genie_region: "string" # (optional) OpsGenie region.
-#         service_key: "string" # (optional) Service key. Required for the PAGER_DUTY notifications type
-#         sms_enabled: true | false # (optional) Flag that indicates whether to send SMS notifications to the project owner. Required for the PROJECT_OWNER notifications type
-#         team_id: "string" # (optional) The ID of the team that receives the alert notification. Required for the TEAMS notifications type
-#         team_name: "string" # (optional) The name of the team that receives the alert notification. Required for the TEAMS notifications type
-#         integration_id: "string" # (optional) The ID of the third-party integration that notifies the team. Required for the TEAMS notifications type
-#         notifier_id: "string" # (optional) The ID of the third-party integration that notifies the team. Required for the TEAMS notifications type
-#         username: "string" # (optional) Username for Atlas number.
-#         victor_ops_api_key: "string" # (optional) VictorOps API key. Required for the VICTOR_OPS notifications type
-#         victor_ops_routing_key: "string" # (optional) VictorOps routing key
-#         webhook_secret: "string" # (optional) Webhook secret. Required for the WEBHOOK notifications type
-#         webhook_url: "string" # (optional) Webhook URL. Required for the WEBHOOK notifications type
-#         microsoft_teams_webhook_url: "string" # (optional) Microsoft Teams webhook URL. Required for the MICROSOFT_TEAMS notifications type
-#     matchers:
-#       - field_name: "string" # (optional) Field name
-#         operator: "string" # (optional) Operator
-#         value: "string" # (optional) Value
-#     metric_threshold_config:
-#       metric_name: "string" # (optional) Metric name
-#       operator: "string" # (optional) Operator
-#       threshold: number # (optional) Threshold
-#       units: "string" # (optional) Units
-#       mode: "string" # (optional) Mode
-#     metric_threshold:
-#       operator: "string" # (optional) Operator
-#       threshold: number # (optional) Threshold
-#       units: "string" # (optional) Units
+#       interval: number                           # (Optional) Must be 0. Default: 1.
+#       retention_unit: string                     # (Optional) Retention unit. Values: "days". Default: "days".
+#       retention_value: number                    # (Optional) Retention value. Default: 7.
+#
+#   maintenance:
+#     enabled: true | false                        # (Optional) Enable maintenance window. Default: false.
+#     day_of_week: number                          # (Optional) Day of week (1=Sunday … 7=Saturday). Default: 1.
+#     hour_of_day: number                          # (Optional) Hour of day in UTC (0–23). Default: 0.
+#     defer: true | false                          # (Optional) Defer the next scheduled maintenance. Default: null.
+#     auto_defer: true | false                     # (Optional) Auto-defer maintenance. Default: null.
+#     auto_defer_once_enabled: true | false        # (Optional) Enable auto-defer once. Default: null.
+#
+#   access_list:                                   # (Optional) Map of IP access list entries keyed by a unique ID.
+#     <id>:
+#       comment: string                            # (Optional) Human-readable comment for the entry.
+#       ip_address: string                         # (Optional) Single IP address. Conflicts with cidr_block and aws_security_group.
+#       aws_security_group: string                 # (Optional) AWS security group ID. Conflicts with ip_address and cidr_block.
+#       cidr_block: string                         # (Optional) CIDR block. Conflicts with ip_address and aws_security_group.
+#
+#   encryption_at_rest:
+#     enabled: true | false                        # (Optional) Enable AWS KMS encryption at rest. Default: false.
+#     deletion_window_in_days: number              # (Optional) KMS key deletion window (7–30 days). Default: 7.
+#     enable_key_rotation: true | false            # (Optional) Enable automatic KMS key rotation. Default: true.
+#     rotation_period_in_days: number              # (Optional) Key rotation period in days (90–2560). Default: 90.
+#     multi_region: true | false                   # (Optional) Create a multi-region KMS key. Default: false.
+#
+#   alerts:                                        # (Optional) List of alert configurations.
+#     - event_type: string                         # (Required) Atlas event type. See https://www.mongodb.com/docs/atlas/reference/api-resources-spec/v2/#tag/Alert-Configurations/operation/createAlertConfiguration
+#       enabled: true | false                      # (Optional) Enable this alert. Default: true.
+#       notifications:
+#         - type_name: string                      # (Required) Notification type. Values: EMAIL, SMS, GROUP, ORG, TEAM, SLACK, DATADOG, OPS_GENIE, VICTOR_OPS, WEBHOOK, MICROSOFT_TEAMS, PAGER_DUTY.
+#           roles: ["string"]                      # (Optional) Project roles to notify. Values: GROUP_OWNER, GROUP_READ_ONLY, etc.
+#           api_token: string                      # (Optional) Slack API token. Required for SLACK type.
+#           channel_name: string                   # (Optional) Slack channel name. Required for SLACK type.
+#           datadog_api_key: string                # (Optional) Datadog API key. Required for DATADOG type.
+#           datadog_region: string                 # (Optional) Datadog region. Values: "US", "EU". Required for DATADOG type.
+#           delay_min: number                      # (Optional) Delay in minutes before sending notification.
+#           email_address: string                  # (Optional) Email address. Required for EMAIL type.
+#           email_enabled: true | false            # (Optional) Send email to project owner. Required for PROJECT_OWNER type.
+#           interval_min: number                   # (Optional) Re-notification interval in minutes.
+#           mobile_number: string                  # (Optional) Mobile number. Required for SMS type.
+#           ops_genie_api_key: string              # (Optional) OpsGenie API key. Required for OPS_GENIE type.
+#           ops_genie_region: string               # (Optional) OpsGenie region. Values: "US", "EU".
+#           service_key: string                    # (Optional) PagerDuty service key. Required for PAGER_DUTY type.
+#           sms_enabled: true | false              # (Optional) Send SMS to project owner. Required for PROJECT_OWNER type.
+#           team_id: string                        # (Optional) Team ID to notify. Required for TEAMS type.
+#           team_name: string                      # (Optional) Team name. Required for TEAMS type.
+#           integration_id: string                 # (Optional) Third-party integration ID.
+#           notifier_id: string                    # (Optional) Notifier ID.
+#           username: string                       # (Optional) Atlas username for USER type.
+#           victor_ops_api_key: string             # (Optional) VictorOps API key. Required for VICTOR_OPS type.
+#           victor_ops_routing_key: string         # (Optional) VictorOps routing key.
+#           webhook_secret: string                 # (Optional) Webhook HMAC secret. Required for WEBHOOK type.
+#           webhook_url: string                    # (Optional) Webhook URL. Required for WEBHOOK type.
+#           microsoft_teams_webhook_url: string    # (Optional) Microsoft Teams webhook URL. Required for MICROSOFT_TEAMS type.
+#       matchers:
+#         - field_name: string                     # (Optional) Field to match. Values: TYPE_NAME, HOSTNAME, PORT, HOSTNAME_AND_PORT, REPLICA_SET_NAME, SHARD_NAME, CLUSTER_NAME.
+#           operator: string                       # (Optional) Comparison operator. Values: EQUALS, NOT_EQUALS, CONTAINS, NOT_CONTAINS, STARTS_WITH, ENDS_WITH, REGEX.
+#           value: string                          # (Optional) Value to match against.
+#       metric_threshold_config:
+#         metric_name: string                      # (Optional) Atlas metric name.
+#         operator: string                         # (Optional) Comparison operator. Values: GREATER_THAN, LESS_THAN.
+#         threshold: number                        # (Optional) Numeric threshold value.
+#         units: string                            # (Optional) Metric units (e.g., "DAYS", "HOURS", "MEGABYTES").
+#         mode: string                             # (Optional) Aggregation mode. Values: AVERAGE, TOTAL, MAXIMUM, MINIMUM.
+#       threshold_config:
+#         operator: string                         # (Optional) Comparison operator. Values: GREATER_THAN, LESS_THAN.
+#         threshold: number                        # (Optional) Numeric threshold value.
+#         units: string                            # (Optional) Threshold units.
 variable "settings" {
-  description = "(optional) The backup compliance policy"
+  description = "(Optional) Module settings object controlling project features: backup compliance, maintenance window, IP access list, encryption at rest, and alert configurations"
   type        = any
   default     = {}
 }
 
 variable "generate_import" {
-  description = "Generate import statements"
+  # (Optional) When true, generates import blocks for existing Atlas resources. Default: false.
+  description = "(Optional) Generate OpenTofu import blocks for existing Atlas resources"
   type        = bool
   default     = false
 }
