@@ -12,7 +12,7 @@
 
 # Terraform Module Mongo Atlas Project with AWS integrations
 
- [![Latest Release](https://img.shields.io/github/release/cloudopsworks/terraform-module-mongoatlas-project.svg?style=for-the-badge)](https://github.com/cloudopsworks/terraform-module-mongoatlas-project/releases/latest) [![Last Updated](https://img.shields.io/github/last-commit/cloudopsworks/terraform-module-mongoatlas-project.svg?style=for-the-badge)](https://github.com/cloudopsworks/terraform-module-mongoatlas-project/commits)
+ [![Latest Release](https://img.shields.io/github/release/cloudopsworks/terraform-module-mongoatlas-aws-project.svg?style=for-the-badge)](https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project/releases/latest) [![Last Updated](https://img.shields.io/github/last-commit/cloudopsworks/terraform-module-mongoatlas-aws-project.svg?style=for-the-badge)](https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project/commits)
 
 
 Terraform/OpenTofu module for MongoDB Atlas project creation and management with AWS integrations.
@@ -52,6 +52,11 @@ infrastructure. It is designed to be consumed via Terragrunt and follows the Clo
 structured-variable convention — all feature flags and settings are grouped under a single
 `settings` object for clean, version-controlled configuration.
 
+The module wraps the base [`terraform-module-mongoatlas-project`](https://github.com/cloudopsworks/terraform-module-mongoatlas-project)
+module and adds AWS-native integration: an AWS KMS Customer-Managed Key (CMK) and a dedicated
+IAM role are provisioned automatically when encryption at rest is enabled, and wired directly
+into the Atlas project's cloud provider access setup.
+
 Key capabilities:
 
 | Feature | Description |
@@ -62,12 +67,30 @@ Key capabilities:
 | **IP access list** | Manage per-entry allow-lists by IP, CIDR block, or AWS security group |
 | **Encryption at rest** | Provision AWS KMS key + IAM role and wire up Atlas Customer-Managed Keys |
 | **Alert configurations** | Define any number of Atlas alert rules with flexible notification routing |
+| **Import support** | Generate OpenTofu import blocks for pre-existing Atlas resources |
+
+### Outputs
+
+| Output | Description |
+|---|---|
+| `project_id` | MongoDB Atlas project ID |
+| `project_name` | MongoDB Atlas project name |
+| `project_creation_timestamp` | Project creation timestamp |
+| `project_backup_policy_id` | Backup compliance policy ID (when enabled) |
+| `project_kms_iam_role_name` | AWS IAM role name for KMS access (when encryption enabled) |
+| `project_kms_iam_role_arn` | AWS IAM role ARN for KMS access (when encryption enabled) |
+| `project_kms_key_id` | AWS KMS key ID (when encryption enabled) |
+| `project_kms_key_arn` | AWS KMS key ARN (when encryption enabled) |
+| `project_kms_key_alias` | AWS KMS key alias (when encryption enabled) |
+| `imported_alert_statement` | OpenTofu import statement for alert configurations (when `generate_import = true`) |
+| `imported_alert_json` | JSON representation of importable alert configurations (when `generate_import = true`) |
+| `imported_kms_alert_statement` | OpenTofu import statement for the KMS alert resource (when `generate_import = true`) |
 
 ## Usage
 
 
 **IMPORTANT:** The `master` branch is used in `source` just as an example. In your code, do not pin to `master` because there may be breaking changes between releases.
-Instead pin to the release tag (e.g. `?ref=vX.Y.Z`) of one of our [latest releases](https://github.com/cloudopsworks/terraform-module-mongoatlas-project/releases).
+Instead pin to the release tag (e.g. `?ref=vX.Y.Z`) of one of our [latest releases](https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project/releases).
 
 
 Consume this module via Terragrunt. Create a `terragrunt.hcl` in your environment directory:
@@ -78,7 +101,7 @@ include "root" {
 }
 
 terraform {
-  source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v2.0.0"
+  source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project.git//?ref=v1.6.7"
 }
 
 inputs = {
@@ -125,7 +148,7 @@ inputs = {
       encryption_at_rest_enabled = false           # (Optional) Require encrypted backups. Default: false.
       restore_window_days        = 7               # (Optional) Restore window in days. Default: 7.
       hourly = {
-        interval       = 6                         # (Optional) Snapshot every N hours. Default: 1.
+        interval        = 6                        # (Optional) Snapshot every N hours (1,2,4,6,8,12). Default: 1.
         retention_unit  = "days"                   # (Optional) Retention unit. Values: "days". Default: "days".
         retention_value = 2                        # (Optional) Retention duration. Default: 1.
       }
@@ -183,8 +206,11 @@ inputs = {
     }
 
     # AWS KMS encryption at rest
+    # When enabled, provisions an AWS KMS CMK and IAM role in the same account/region and
+    # wires them to Atlas for Customer-Managed Key (CMK) encryption.
+    # The AWS region is passed to Atlas as UPPER_UNDERSCORE format (e.g. "us-east-1" → "US_EAST_1").
     encryption_at_rest = {
-      enabled                  = false             # (Optional) Create KMS key and enable CMK encryption. Default: false.
+      enabled                  = false             # (Optional) Provision KMS key and enable CMK encryption. Default: false.
       deletion_window_in_days  = 7                 # (Optional) KMS key pending-deletion window (7–30). Default: 7.
       enable_key_rotation      = true              # (Optional) Enable automatic key rotation. Default: true.
       rotation_period_in_days  = 90                # (Optional) Rotation period in days (90–2560). Default: 90.
@@ -214,8 +240,11 @@ inputs = {
     ]
   }
 
+  # ── Import support ────────────────────────────────────────────────────────────
+  # generate_import = false                        # (Optional) Output OpenTofu import blocks for existing resources.
+
   extra_tags = {
-    Team    = "platform"
+    Team       = "platform"
     CostCenter = "12345"
   }
 }
@@ -237,7 +266,7 @@ inputs = {
    }
 
    terraform {
-     source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v2.0.0"
+     source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project.git//?ref=v1.6.7"
    }
 
    inputs = {
@@ -301,7 +330,7 @@ include "root" {
 }
 
 terraform {
-  source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v2.0.0"
+  source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project.git//?ref=v1.6.7"
 }
 
 inputs = {
@@ -325,7 +354,7 @@ include "root" {
 }
 
 terraform {
-  source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v2.0.0"
+  source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project.git//?ref=v1.6.7"
 }
 
 inputs = {
@@ -374,7 +403,7 @@ include "root" {
 }
 
 terraform {
-  source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v2.0.0"
+  source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project.git//?ref=v1.6.7"
 }
 
 inputs = {
@@ -418,6 +447,33 @@ inputs = {
 }
 ```
 
+**Importing pre-existing Atlas resources:**
+
+```hcl
+include "root" {
+  path = find_in_parent_folders()
+}
+
+terraform {
+  source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project.git//?ref=v1.6.7"
+}
+
+inputs = {
+  org = {
+    organization_name = "acme"
+    organization_unit = "platform"
+    environment_type  = "production"
+    environment_name  = "prod"
+  }
+  name_prefix     = "myapp"
+  organization_id = "5e7b987600000000000000ab"
+  settings        = {}
+
+  # Set to true to output OpenTofu import blocks; review outputs then set back to false.
+  generate_import = true
+}
+```
+
 
 
 ## Makefile Targets
@@ -451,6 +507,7 @@ Available targets:
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_project"></a> [project](#module\_project) | git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git | master |
 | <a name="module_tags"></a> [tags](#module\_tags) | cloudopsworks/tags/local | 1.0.9 |
 
 ## Resources
@@ -461,21 +518,11 @@ Available targets:
 | [aws_iam_role_policy.kms](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
 | [aws_kms_alias.kms](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
 | [aws_kms_key.kms](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
-| [mongodbatlas_alert_configuration.alert](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/alert_configuration) | resource |
 | [mongodbatlas_alert_configuration.kms_alert](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/alert_configuration) | resource |
-| [mongodbatlas_backup_compliance_policy.this](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/backup_compliance_policy) | resource |
-| [mongodbatlas_cloud_provider_access_authorization.this](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/cloud_provider_access_authorization) | resource |
-| [mongodbatlas_cloud_provider_access_setup.this](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/cloud_provider_access_setup) | resource |
-| [mongodbatlas_encryption_at_rest.this](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/encryption_at_rest) | resource |
-| [mongodbatlas_maintenance_window.this](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/maintenance_window) | resource |
-| [mongodbatlas_project.this](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/project) | resource |
-| [mongodbatlas_project_ip_access_list.this](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/project_ip_access_list) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_iam_policy_document.kms_assume_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.kms_key_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
-| [mongodbatlas_alert_configurations.import](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/data-sources/alert_configurations) | data source |
-| [mongodbatlas_organizations.this](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/data-sources/organizations) | data source |
 | [mongodbatlas_roles_org_id.current](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/data-sources/roles_org_id) | data source |
 
 ## Inputs
@@ -499,6 +546,7 @@ Available targets:
 |------|-------------|
 | <a name="output_imported_alert_json"></a> [imported\_alert\_json](#output\_imported\_alert\_json) | n/a |
 | <a name="output_imported_alert_statement"></a> [imported\_alert\_statement](#output\_imported\_alert\_statement) | n/a |
+| <a name="output_imported_kms_alert_statement"></a> [imported\_kms\_alert\_statement](#output\_imported\_kms\_alert\_statement) | n/a |
 | <a name="output_project_backup_policy_id"></a> [project\_backup\_policy\_id](#output\_project\_backup\_policy\_id) | n/a |
 | <a name="output_project_creation_timestamp"></a> [project\_creation\_timestamp](#output\_project\_creation\_timestamp) | n/a |
 | <a name="output_project_id"></a> [project\_id](#output\_project\_id) | n/a |
@@ -515,7 +563,7 @@ Available targets:
 
 **Got a question?** We got answers. 
 
-File a GitHub [issue](https://github.com/cloudopsworks/terraform-module-mongoatlas-project/issues), send us an [email][email] or join our [Slack Community][slack].
+File a GitHub [issue](https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project/issues), send us an [email][email] or join our [Slack Community][slack].
 
 
 ## DevOps Tools
@@ -531,7 +579,7 @@ File a GitHub [issue](https://github.com/cloudopsworks/terraform-module-mongoatl
 
 ### Bug Reports & Feature Requests
 
-Please use the [issue tracker](https://github.com/cloudopsworks/terraform-module-mongoatlas-project/issues) to report any bugs or file feature requests.
+Please use the [issue tracker](https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project/issues) to report any bugs or file feature requests.
 
 ### Developing
 
@@ -598,30 +646,30 @@ This project is maintained by [Cloud Ops Works LLC][website].
 [![Beacon][beacon]][website]
 
   [logo]: https://cloudopsworks.co/images/main-logo.png
-  [docs]: https://cloudopsworks.co/resources?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=docs
-  [website]: https://cloudopsworks.co?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=website
-  [github]: https://cloudopsworks.co/github?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=github
-  [jobs]: https://cloudopsworks.co/jobs?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=jobs
-  [hire]: https://cloudopsworks.co/hire?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=hire
-  [slack]: https://cloudopsworks.co/slack?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=slack
-  [linkedin]: https://cloudopsworks.co/linkedin?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=linkedin
-  [x]: https://cloudopsworks.co/x?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=x
-  [testimonial]: https://cloudopsworks.co/case-studies?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=testimonial
-  [office_hours]: https://cloudopsworks.co/office-hours?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=office_hours
-  [newsletter]: https://cloudopsworks.co/resources?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=newsletter
-  [email]: https://cloudopsworks.co/contact?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=email
-  [commercial_support]: https://cloudopsworks.co/services?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=commercial_support
-  [we_love_open_source]: https://cloudopsworks.co/open-source?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=we_love_open_source
-  [terraform_modules]: https://cloudopsworks.co/open-source?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=terraform_modules
+  [docs]: https://cloudopsworks.co/resources?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-aws-project&utm_content=docs
+  [website]: https://cloudopsworks.co?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-aws-project&utm_content=website
+  [github]: https://cloudopsworks.co/github?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-aws-project&utm_content=github
+  [jobs]: https://cloudopsworks.co/jobs?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-aws-project&utm_content=jobs
+  [hire]: https://cloudopsworks.co/hire?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-aws-project&utm_content=hire
+  [slack]: https://cloudopsworks.co/slack?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-aws-project&utm_content=slack
+  [linkedin]: https://cloudopsworks.co/linkedin?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-aws-project&utm_content=linkedin
+  [x]: https://cloudopsworks.co/x?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-aws-project&utm_content=x
+  [testimonial]: https://cloudopsworks.co/case-studies?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-aws-project&utm_content=testimonial
+  [office_hours]: https://cloudopsworks.co/office-hours?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-aws-project&utm_content=office_hours
+  [newsletter]: https://cloudopsworks.co/resources?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-aws-project&utm_content=newsletter
+  [email]: https://cloudopsworks.co/contact?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-aws-project&utm_content=email
+  [commercial_support]: https://cloudopsworks.co/services?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-aws-project&utm_content=commercial_support
+  [we_love_open_source]: https://cloudopsworks.co/open-source?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-aws-project&utm_content=we_love_open_source
+  [terraform_modules]: https://cloudopsworks.co/open-source?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-aws-project&utm_content=terraform_modules
   [readme_header_img]: https://cloudopsworks.co/images/readme-header.png
-  [readme_header_link]: https://cloudopsworks.co/readme/header/link?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=readme_header_link
+  [readme_header_link]: https://cloudopsworks.co/readme/header/link?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-aws-project&utm_content=readme_header_link
   [readme_footer_img]: https://cloudopsworks.co/images/main-logo-footer.png
-  [readme_footer_link]: https://cloudopsworks.co/readme/footer/link?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=readme_footer_link
+  [readme_footer_link]: https://cloudopsworks.co/readme/footer/link?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-aws-project&utm_content=readme_footer_link
   [readme_commercial_support_img]: https://cloudopsworks.co/readme/commercial-support/img
-  [readme_commercial_support_link]: https://cloudopsworks.co/readme/commercial-support/link?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-project&utm_content=readme_commercial_support_link
-  [share_twitter]: https://x.com/intent/tweet/?text=Terraform+Module+Mongo+Atlas+Project+with+AWS+integrations&url=https://github.com/cloudopsworks/terraform-module-mongoatlas-project
-  [share_linkedin]: https://www.linkedin.com/shareArticle?mini=true&title=Terraform+Module+Mongo+Atlas+Project+with+AWS+integrations&url=https://github.com/cloudopsworks/terraform-module-mongoatlas-project
-  [share_reddit]: https://reddit.com/submit/?url=https://github.com/cloudopsworks/terraform-module-mongoatlas-project
-  [share_facebook]: https://facebook.com/sharer/sharer.php?u=https://github.com/cloudopsworks/terraform-module-mongoatlas-project
-  [share_email]: mailto:?subject=Terraform+Module+Mongo+Atlas+Project+with+AWS+integrations&body=https://github.com/cloudopsworks/terraform-module-mongoatlas-project
-  [beacon]: https://ga-beacon.cloudospworks.co/G-QMZVYYN2VN/cloudopsworks/terraform-module-mongoatlas-project?pixel&cs=github&cm=readme&an=terraform-module-mongoatlas-project
+  [readme_commercial_support_link]: https://cloudopsworks.co/readme/commercial-support/link?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-mongoatlas-aws-project&utm_content=readme_commercial_support_link
+  [share_twitter]: https://x.com/intent/tweet/?text=Terraform+Module+Mongo+Atlas+Project+with+AWS+integrations&url=https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project
+  [share_linkedin]: https://www.linkedin.com/shareArticle?mini=true&title=Terraform+Module+Mongo+Atlas+Project+with+AWS+integrations&url=https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project
+  [share_reddit]: https://reddit.com/submit/?url=https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project
+  [share_facebook]: https://facebook.com/sharer/sharer.php?u=https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project
+  [share_email]: mailto:?subject=Terraform+Module+Mongo+Atlas+Project+with+AWS+integrations&body=https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project
+  [beacon]: https://ga-beacon.cloudospworks.co/G-QMZVYYN2VN/cloudopsworks/terraform-module-mongoatlas-aws-project?pixel&cs=github&cm=readme&an=terraform-module-mongoatlas-aws-project

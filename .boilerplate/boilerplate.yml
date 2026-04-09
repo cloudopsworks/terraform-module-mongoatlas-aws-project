@@ -15,7 +15,7 @@ variables:
     type: bool
     default: false
   - name: tags
-    order: 6
+    order: 1
     description: "Tags"
     type: map
     default: {}
