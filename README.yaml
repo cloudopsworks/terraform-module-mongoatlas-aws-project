@@ -365,6 +365,30 @@ quickstart: |-
      terragrunt output project_name
      ```
 
+  **Contributing / branching workflow (GitHub Flow):**
+
+  All changes flow through feature branches merged into `master` via pull request.
+  Include a semver annotation in your commit message or PR description to trigger the
+  correct version bump in CI:
+
+  | Change type | Annotation |
+  |---|---|
+  | Breaking / major | `+semver: major` or `+semver: breaking` |
+  | New feature / minor | `+semver: minor` or `+semver: feature` |
+  | Bug fix / patch | `+semver: fix` or `+semver: patch` |
+
+  ```bash
+  # Start a feature branch
+  make gitflow/feature/start-no-develop:my-feature
+
+  # Validate
+  make fmt
+  make lint
+
+  # Open a PR back to master
+  make gitflow/feature/finish-no-develop:my-feature
+  ```
+
 include:
   - "docs/targets.md"
   - "docs/terraform.md"
