@@ -13,33 +13,6 @@ locals {
   atlas_region = upper(replace(data.aws_region.current.id, "-", "_"))
 }
 
-resource "mongodbatlas_cloud_provider_access_setup" "this" {
-  count         = try(var.settings.encryption_at_rest.enabled, false) ? 1 : 0
-  project_id    = mongodbatlas_project.this.id
-  provider_name = "AWS"
-}
-
-resource "mongodbatlas_cloud_provider_access_authorization" "this" {
-  count      = try(var.settings.encryption_at_rest.enabled, false) ? 1 : 0
-  project_id = mongodbatlas_project.this.id
-  role_id    = mongodbatlas_cloud_provider_access_setup.this[count.index].role_id
-  aws {
-    iam_assumed_role_arn = aws_iam_role.kms[count.index].arn
-  }
-}
-
-resource "mongodbatlas_encryption_at_rest" "this" {
-  count      = try(var.settings.encryption_at_rest.enabled, false) ? 1 : 0
-  depends_on = [aws_iam_role.kms, aws_iam_role_policy.kms, aws_kms_key.kms, aws_kms_alias.kms]
-  project_id = mongodbatlas_project.this.id
-  aws_kms_config {
-    enabled                = true
-    customer_master_key_id = aws_kms_key.kms[count.index].arn
-    region                 = local.atlas_region
-    role_id                = mongodbatlas_cloud_provider_access_authorization.this[count.index].role_id
-  }
-}
-
 data "aws_iam_policy_document" "kms_assume_role" {
   count = try(var.settings.encryption_at_rest.enabled, false) ? 1 : 0
   statement {
@@ -47,11 +20,11 @@ data "aws_iam_policy_document" "kms_assume_role" {
     actions = ["sts:AssumeRole"]
     principals {
       type        = "AWS"
-      identifiers = [mongodbatlas_cloud_provider_access_setup.this[count.index].aws_config[0].atlas_aws_account_arn]
+      identifiers = [module.project.cloud_provider_setup_aws_account_arn]
     }
     condition {
       test     = "StringEquals"
-      values   = [mongodbatlas_cloud_provider_access_setup.this[count.index].aws_config[0].atlas_assumed_role_external_id]
+      values   = [module.project.cloud_provider_setup_aws_external_id]
       variable = "sts:ExternalId"
     }
   }
@@ -79,7 +52,7 @@ data "aws_iam_policy_document" "kms_key_policy" {
     resources = ["*"]
     principals {
       type        = "AWS"
-      identifiers = [mongodbatlas_cloud_provider_access_setup.this[count.index].aws_config[0].atlas_aws_account_arn]
+      identifiers = [module.project.cloud_provider_setup_aws_account_arn]
     }
   }
   statement {
@@ -121,7 +94,7 @@ resource "aws_iam_role_policy" "kms" {
 
 resource "aws_kms_key" "kms" {
   count                   = try(var.settings.encryption_at_rest.enabled, false) ? 1 : 0
-  description             = "KMS key for MongoDB Atlas - ${local.atlas_name}"
+  description             = "KMS key for MongoDB Atlas - ${module.project.project_name}"
   deletion_window_in_days = try(var.settings.encryption_at_rest.deletion_window_in_days, 7)
   enable_key_rotation     = try(var.settings.encryption_at_rest.enable_key_rotation, true)
   rotation_period_in_days = try(var.settings.encryption_at_rest.rotation_period_in_days, 90)

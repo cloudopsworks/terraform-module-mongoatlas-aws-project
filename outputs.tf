@@ -8,19 +8,19 @@
 #
 
 output "project_name" {
-  value = mongodbatlas_project.this.name
+  value = module.project.project_name
 }
 
 output "project_id" {
-  value = mongodbatlas_project.this.id
+  value = module.project.project_id
 }
 
 output "project_creation_timestamp" {
-  value = mongodbatlas_project.this.created
+  value = module.project.project_creation_timestamp
 }
 
 output "project_backup_policy_id" {
-  value = try(var.settings.backup_compliance.enabled, false) ? mongodbatlas_backup_compliance_policy.this[0].id : null
+  value = module.project.project_backup_policy_id
 }
 
 output "project_kms_iam_role_name" {
@@ -41,4 +41,18 @@ output "project_kms_key_arn" {
 
 output "project_kms_key_alias" {
   value = try(var.settings.encryption_at_rest.enabled, false) ? aws_kms_alias.kms[0].name : null
+}
+
+output "imported_alert_statement" {
+  value = module.project.imported_alert_statement
+}
+
+output "imported_alert_json" {
+  value = module.project.imported_alert_json
+}
+
+output "imported_kms_alert_statement" {
+  value = var.generate_import ? (
+    length(local.kms_alert_import) > 0 ? join("\n", local.kms_alert_import) : null
+  ) : null
 }
