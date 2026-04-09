@@ -157,4 +157,8 @@ settings:
   #     #     value: ""                                    # (Optional) Value to match.
 
 # ── Import ─────────────────────────────────────────────────────────────────────
-# generate_import: false  # (Optional) Generate OpenTofu import blocks for existing Atlas resources. Default: false.
+generate_import: false    # (Optional) Generate OpenTofu import blocks for existing Atlas resources. Default: false.
+                          # When true, the following outputs contain ready-to-use import statements:
+                          #   imported_alert_statement      — import blocks for all alert configurations
+                          #   imported_alert_json           — JSON of importable alerts
+                          #   imported_kms_alert_statement  — import block for the KMS rotation alert resource

@@ -2,11 +2,11 @@ name: Terraform Module Mongo Atlas Project with AWS integrations
 #logo: logo/logo.jpg
 badges:
   - name: Latest Release
-    image: https://img.shields.io/github/release/cloudopsworks/terraform-module-mongoatlas-project.svg?style=for-the-badge
-    url: https://github.com/cloudopsworks/terraform-module-mongoatlas-project/releases/latest
+    image: https://img.shields.io/github/release/cloudopsworks/terraform-module-mongoatlas-aws-project.svg?style=for-the-badge
+    url: https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project/releases/latest
   - name: Last Updated
-    image: https://img.shields.io/github/last-commit/cloudopsworks/terraform-module-mongoatlas-project.svg?style=for-the-badge
-    url: https://github.com/cloudopsworks/terraform-module-mongoatlas-project/commits
+    image: https://img.shields.io/github/last-commit/cloudopsworks/terraform-module-mongoatlas-aws-project.svg?style=for-the-badge
+    url: https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project/commits
 
 license: "APACHE2"
 
@@ -15,7 +15,7 @@ copyrights:
     url: "https://cloudops.works"
     year: "2021-2026"
 
-github_repo: cloudopsworks/terraform-module-mongoatlas-project
+github_repo: cloudopsworks/terraform-module-mongoatlas-aws-project
 
 description: |-
   Terraform/OpenTofu module for MongoDB Atlas project creation and management with AWS integrations.
@@ -29,6 +29,11 @@ introduction: |-
   structured-variable convention — all feature flags and settings are grouped under a single
   `settings` object for clean, version-controlled configuration.
 
+  The module wraps the base [`terraform-module-mongoatlas-project`](https://github.com/cloudopsworks/terraform-module-mongoatlas-project)
+  module and adds AWS-native integration: an AWS KMS Customer-Managed Key (CMK) and a dedicated
+  IAM role are provisioned automatically when encryption at rest is enabled, and wired directly
+  into the Atlas project's cloud provider access setup.
+
   Key capabilities:
 
   | Feature | Description |
@@ -39,6 +44,24 @@ introduction: |-
   | **IP access list** | Manage per-entry allow-lists by IP, CIDR block, or AWS security group |
   | **Encryption at rest** | Provision AWS KMS key + IAM role and wire up Atlas Customer-Managed Keys |
   | **Alert configurations** | Define any number of Atlas alert rules with flexible notification routing |
+  | **Import support** | Generate OpenTofu import blocks for pre-existing Atlas resources |
+
+  ### Outputs
+
+  | Output | Description |
+  |---|---|
+  | `project_id` | MongoDB Atlas project ID |
+  | `project_name` | MongoDB Atlas project name |
+  | `project_creation_timestamp` | Project creation timestamp |
+  | `project_backup_policy_id` | Backup compliance policy ID (when enabled) |
+  | `project_kms_iam_role_name` | AWS IAM role name for KMS access (when encryption enabled) |
+  | `project_kms_iam_role_arn` | AWS IAM role ARN for KMS access (when encryption enabled) |
+  | `project_kms_key_id` | AWS KMS key ID (when encryption enabled) |
+  | `project_kms_key_arn` | AWS KMS key ARN (when encryption enabled) |
+  | `project_kms_key_alias` | AWS KMS key alias (when encryption enabled) |
+  | `imported_alert_statement` | OpenTofu import statement for alert configurations (when `generate_import = true`) |
+  | `imported_alert_json` | JSON representation of importable alert configurations (when `generate_import = true`) |
+  | `imported_kms_alert_statement` | OpenTofu import statement for the KMS alert resource (when `generate_import = true`) |
 
 # How to use this project
 usage: |-
@@ -50,7 +73,7 @@ usage: |-
   }
 
   terraform {
-    source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v2.0.0"
+    source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project.git//?ref=v1.6.7"
   }
 
   inputs = {
@@ -97,7 +120,7 @@ usage: |-
         encryption_at_rest_enabled = false           # (Optional) Require encrypted backups. Default: false.
         restore_window_days        = 7               # (Optional) Restore window in days. Default: 7.
         hourly = {
-          interval       = 6                         # (Optional) Snapshot every N hours. Default: 1.
+          interval        = 6                        # (Optional) Snapshot every N hours (1,2,4,6,8,12). Default: 1.
           retention_unit  = "days"                   # (Optional) Retention unit. Values: "days". Default: "days".
           retention_value = 2                        # (Optional) Retention duration. Default: 1.
         }
@@ -155,8 +178,11 @@ usage: |-
       }
 
       # AWS KMS encryption at rest
+      # When enabled, provisions an AWS KMS CMK and IAM role in the same account/region and
+      # wires them to Atlas for Customer-Managed Key (CMK) encryption.
+      # The AWS region is passed to Atlas as UPPER_UNDERSCORE format (e.g. "us-east-1" → "US_EAST_1").
       encryption_at_rest = {
-        enabled                  = false             # (Optional) Create KMS key and enable CMK encryption. Default: false.
+        enabled                  = false             # (Optional) Provision KMS key and enable CMK encryption. Default: false.
         deletion_window_in_days  = 7                 # (Optional) KMS key pending-deletion window (7–30). Default: 7.
         enable_key_rotation      = true              # (Optional) Enable automatic key rotation. Default: true.
         rotation_period_in_days  = 90                # (Optional) Rotation period in days (90–2560). Default: 90.
@@ -186,8 +212,11 @@ usage: |-
       ]
     }
 
+    # ── Import support ────────────────────────────────────────────────────────────
+    # generate_import = false                        # (Optional) Output OpenTofu import blocks for existing resources.
+
     extra_tags = {
-      Team    = "platform"
+      Team       = "platform"
       CostCenter = "12345"
     }
   }
@@ -203,7 +232,7 @@ examples: |-
   }
 
   terraform {
-    source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v2.0.0"
+    source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project.git//?ref=v1.6.7"
   }
 
   inputs = {
@@ -227,7 +256,7 @@ examples: |-
   }
 
   terraform {
-    source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v2.0.0"
+    source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project.git//?ref=v1.6.7"
   }
 
   inputs = {
@@ -276,7 +305,7 @@ examples: |-
   }
 
   terraform {
-    source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v2.0.0"
+    source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project.git//?ref=v1.6.7"
   }
 
   inputs = {
@@ -320,6 +349,33 @@ examples: |-
   }
   ```
 
+  **Importing pre-existing Atlas resources:**
+
+  ```hcl
+  include "root" {
+    path = find_in_parent_folders()
+  }
+
+  terraform {
+    source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project.git//?ref=v1.6.7"
+  }
+
+  inputs = {
+    org = {
+      organization_name = "acme"
+      organization_unit = "platform"
+      environment_type  = "production"
+      environment_name  = "prod"
+    }
+    name_prefix     = "myapp"
+    organization_id = "5e7b987600000000000000ab"
+    settings        = {}
+
+    # Set to true to output OpenTofu import blocks; review outputs then set back to false.
+    generate_import = true
+  }
+  ```
+
 # How to get started quickly
 quickstart: |-
   1. Export Atlas and AWS credentials:
@@ -336,7 +392,7 @@ quickstart: |-
      }
 
      terraform {
-       source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git//?ref=v2.0.0"
+       source = "git::https://github.com/cloudopsworks/terraform-module-mongoatlas-aws-project.git//?ref=v1.6.7"
      }
 
      inputs = {
