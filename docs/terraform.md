@@ -10,14 +10,14 @@
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.40.0 |
-| <a name="provider_mongodbatlas"></a> [mongodbatlas](#provider\_mongodbatlas) | 2.10.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | ~> 6.35 |
+| <a name="provider_mongodbatlas"></a> [mongodbatlas](#provider\_mongodbatlas) | ~> 2.1 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_project"></a> [project](#module\_project) | git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git | master |
+| <a name="module_project"></a> [project](#module\_project) | git::https://github.com/cloudopsworks/terraform-module-mongoatlas-project.git | v1.0.0 |
 | <a name="module_tags"></a> [tags](#module\_tags) | cloudopsworks/tags/local | 1.0.9 |
 
 ## Resources
