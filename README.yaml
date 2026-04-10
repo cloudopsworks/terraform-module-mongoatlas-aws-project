@@ -13,7 +13,7 @@ license: "APACHE2"
 copyrights:
   - name: "Cloud Ops Works LLC"
     url: "https://cloudops.works"
-    year: "2021-2026"
+    year: "2021"
 
 github_repo: cloudopsworks/terraform-module-mongoatlas-aws-project
 
